@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Centered Video Grid with Shading</title>
+    <title>Centered Video Grid with Shading and Audio Control</title>
     <style>
         /* Reset margins, paddings, and box sizing */
         * {
@@ -18,13 +18,9 @@
             /* Prevent overscroll on mobile */
             overscroll-behavior: none;
             touch-action: none;
-            background-color: black; /* Set background to black */
-        }
-
-        /* Content container with fade-in effect */
-        .content {
-            opacity: 0; /* Start invisible */
-            transition: opacity 1s ease-in; /* Fade-in effect */
+            background-color: black; /* Initial background color */
+            transition: filter 1s ease-in-out; /* Smooth transition for inversion */
+            position: relative; /* For positioning the mute button */
         }
 
         /* Gradient overlay */
@@ -42,14 +38,16 @@
                 rgba(0, 0, 0, 1) 100%
             );
             pointer-events: none; /* Allow interactions below */
+            transition: background 1s ease-in-out; /* Smooth transition for gradient */
         }
 
         /* Grid container */
         .grid-container {
             position: absolute; /* Enable positioning */
-            /* Left and top will be set dynamically */
-            /* width and height will be set dynamically */
+            display: grid; /* Ensure the grid is displayed */
             grid-gap: 0;
+            width: 100%;
+            height: 100%;
         }
 
         .grid-item {
@@ -59,15 +57,17 @@
             background-size: cover;
             background-position: center;
             background-color: #000; /* Fallback background color */
-            background-image: url('other.png'); /* Apply 'other.png' as the background image */
+            background-image: url('other.png'); /* Default background image */
+            /* Removed individual transitions for grid items */
         }
 
         /* Styling for the center cell */
         .grid-item.center {
             position: relative; /* Allow video stacking */
-            background-image: url('other.png'); /* Use 'other.png' as the background */
+            background-image: url('other.png'); /* Default background image */
             background-size: cover; /* Make sure the background covers the area */
             background-position: center;
+            cursor: pointer; /* Change cursor to pointer for center grid item */
         }
 
         /* Style for the video */
@@ -82,20 +82,70 @@
             display: block;
             background-color: transparent; /* Ensure transparency is maintained */
             pointer-events: none; /* Ensure clicks go through video */
+            cursor: pointer; /* Change cursor to pointer when over the video */
+            /* Removed individual transitions for video */
+        }
+
+        /* Mute/Unmute Button */
+        .mute-button {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            background-color: rgba(255, 255, 255, 0.8);
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 3; /* Above other elements */
+            transition: background-color 0.3s ease;
+        }
+
+        .mute-button:hover {
+            background-color: rgba(255, 255, 255, 1);
+        }
+
+        .mute-button:focus {
+            outline: none;
+        }
+
+        /* Icons for mute and unmute */
+        .mute-button::before {
+            content: '🔇'; /* Default icon: Muted */
+            font-size: 20px;
+        }
+
+        .mute-button.unmuted::before {
+            content: '🔊'; /* Icon when unmuted */
+        }
+
+        /* Class to invert colors */
+        .invert-colors {
+            filter: invert(100%);
+            transition: filter 1s ease-in-out; /* Smooth transition for the color inversion */
         }
 
     </style>
 </head>
 <body>
     <div class="content">
-        <div class="gradient-overlay"></div>
-        <!-- Optional loading indicator -->
-        <div class="loading" id="loading">Loading...</div>
+        <div class="gradient-overlay" id="gradient-overlay"></div> <!-- Radial gradient -->
         <div class="grid-container" id="grid-container">
             <!-- Grid items will be inserted here -->
         </div>
     </div>
+
+    <!-- Mute/Unmute Button -->
+    <button class="mute-button" id="mute-button" aria-label="Mute audio"></button>
+
+    <!-- Audio Element -->
+    <audio id="background-audio" src="aquarius_siteperso.mp3" loop muted></audio>
+
     <script>
+        // Function to preload images if necessary (optional)
         function preloadImage(src) {
             return new Promise((resolve, reject) => {
                 const img = new Image();
@@ -107,16 +157,13 @@
 
         async function createGrid() {
             const container = document.getElementById('grid-container');
-            const loadingIndicator = document.getElementById('loading');
-            const content = document.querySelector('.content');
 
             try {
                 container.innerHTML = '';
 
                 const imgOriginalSize = 504; // Replace with your image's original size in pixels
                 const displayScale = 0.75;    // Images displayed at 75% of original size
-                const desiredVideoScale = 0.8; // Video occupies 80% of the viewport
-                const minCellSize = 100;     // Minimum cell size in pixels
+                const minCellSize = 100;      // Minimum cell size in pixels
                 const maxCellSize = imgOriginalSize * displayScale; // Maximum cell size
 
                 // Get viewport dimensions considering mobile address bars
@@ -126,10 +173,7 @@
                 // Calculate image display size ensuring the center item is fully visible and responsive
                 let cellSize = Math.min(
                     maxCellSize,
-                    Math.max(
-                        minCellSize,
-                        Math.min(viewportWidth, viewportHeight) * desiredVideoScale
-                    )
+                    Math.max(minCellSize, Math.min(viewportWidth, viewportHeight))
                 );
 
                 // Calculate number of columns and rows needed to cover the viewport
@@ -158,7 +202,6 @@
                 container.style.top = `${gridTop}px`;
 
                 // Set grid template columns and rows
-                container.style.display = 'grid'; // Ensure the grid is displayed
                 container.style.gridTemplateColumns = `repeat(${cols}, ${cellSize}px)`;
                 container.style.gridTemplateRows = `repeat(${rows}, ${cellSize}px)`;
 
@@ -167,6 +210,9 @@
                     for (let col = 0; col < cols; col++) {
                         const gridItem = document.createElement('div');
                         gridItem.className = 'grid-item';
+
+                        // Set the grid item background image
+                        gridItem.style.backgroundImage = `url('other.png')`;
 
                         if (row === centerRow && col === centerCol) {
                             gridItem.classList.add('center');
@@ -179,36 +225,30 @@
                             video.setAttribute('autoplay', 'true');
                             video.setAttribute('loop', 'true');
 
-                            // Create source elements
+                            // Create source element for webm video
                             const sourceWebM = document.createElement('source');
-                            sourceWebM.src = 'center.webm';
+                            sourceWebM.src = 'center.webm'; // Use the center video
                             sourceWebM.type = 'video/webm';
 
-                            const sourceMP4 = document.createElement('source');
-                            sourceMP4.src = 'center.mp4';
-                            sourceMP4.type = 'video/mp4';
-
                             video.appendChild(sourceWebM);
-                            video.appendChild(sourceMP4);
-
                             gridItem.appendChild(video);
+
+                            // Add click event to toggle color inversion
+                            gridItem.addEventListener('click', () => toggleInversion());
                         }
 
                         container.appendChild(gridItem);
                     }
                 }
 
-                // Hide the loading indicator
-                if (loadingIndicator) {
-                    loadingIndicator.style.display = 'none';
-                }
-
-                // Trigger the fade-in effect
-                content.style.opacity = '1';
-
             } catch (error) {
                 console.error('Error loading background image:', error);
             }
+        }
+
+        function toggleInversion() {
+            // Toggle the 'invert-colors' class on the body element
+            document.body.classList.toggle('invert-colors');
         }
 
         // Initialize grid on load and resize
@@ -218,6 +258,9 @@
             // Play video after user interaction (for mobile browsers)
             document.body.addEventListener('touchstart', playCenterVideo, { once: true });
             document.body.addEventListener('click', playCenterVideo, { once: true });
+
+            // Initialize audio
+            initializeAudio();
         });
 
         window.addEventListener('resize', createGrid);
@@ -228,6 +271,47 @@
                 video.play().catch(err => {
                     console.error('Video play failed:', err);
                 });
+            }
+
+            // Also attempt to play audio if not already handled
+            const audio = document.getElementById('background-audio');
+            if (audio && audio.paused) {
+                audio.play().catch(err => {
+                    console.error('Audio play failed:', err);
+                });
+            }
+        }
+
+        // Audio Initialization and Mute/Unmute Functionality
+        function initializeAudio() {
+            const audio = document.getElementById('background-audio');
+            const muteButton = document.getElementById('mute-button');
+
+            // Attempt to play audio (will be muted by default)
+            audio.play().catch(err => {
+                console.error('Audio play failed:', err);
+            });
+
+            // Set initial button state based on audio mute
+            updateMuteButton();
+
+            // Add click event listener to the mute button
+            muteButton.addEventListener('click', () => {
+                audio.muted = !audio.muted;
+                updateMuteButton();
+            });
+        }
+
+        function updateMuteButton() {
+            const audio = document.getElementById('background-audio');
+            const muteButton = document.getElementById('mute-button');
+
+            if (audio.muted) {
+                muteButton.classList.remove('unmuted');
+                muteButton.setAttribute('aria-label', 'Unmute audio');
+            } else {
+                muteButton.classList.add('unmuted');
+                muteButton.setAttribute('aria-label', 'Mute audio');
             }
         }
 
