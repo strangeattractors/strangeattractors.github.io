@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Centered Video Grid with Shading</title>
+    <style>
+        /* Reset margins, paddings, and box sizing */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden; /* Prevent scrollbars */
+            /* Prevent overscroll on mobile */
+            overscroll-behavior: none;
+            touch-action: none;
+            background-color: black; /* Set background to black */
+        }
+
+        /* Content container with fade-in effect */
+        .content {
+            opacity: 0; /* Start invisible */
+            transition: opacity 1s ease-in; /* Fade-in effect */
+        }
+
+        /* Gradient overlay */
+        .gradient-overlay {
+            position: fixed;
+            z-index: 1; /* Overlay above grid items */
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(
+                circle at center,
+                rgba(0, 0, 0, 0) 356px,
+                rgba(0, 0, 0, 0) 356px,
+                rgba(0, 0, 0, 1) 100%
+            );
+            pointer-events: none; /* Allow interactions below */
+        }
+
+        /* Grid container */
+        .grid-container {
+            position: absolute; /* Enable positioning */
+            /* Left and top will be set dynamically */
+            /* width and height will be set dynamically */
+            grid-gap: 0;
+        }
+
+        .grid-item {
+            position: relative; /* For stacking context */
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            background-color: #000; /* Fallback background color */
+            background-image: url('other.png'); /* Apply 'other.png' as the background image */
+        }
+
+        /* Styling for the center cell */
+        .grid-item.center {
+            position: relative; /* Allow video stacking */
+            background-image: url('other.png'); /* Use 'other.png' as the background */
+            background-size: cover; /* Make sure the background covers the area */
+            background-position: center;
+        }
+
+        /* Style for the video */
+        .center-video {
+            position: absolute;
+            z-index: 2; /* Above the overlay */
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            background-color: transparent; /* Ensure transparency is maintained */
+            pointer-events: none; /* Ensure clicks go through video */
+        }
+
+    </style>
+</head>
+<body>
+    <div class="content">
+        <div class="gradient-overlay"></div>
+        <!-- Optional loading indicator -->
+        <div class="loading" id="loading">Loading...</div>
+        <div class="grid-container" id="grid-container">
+            <!-- Grid items will be inserted here -->
+        </div>
+    </div>
+    <script>
+        function preloadImage(src) {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.src = src;
+                img.onload = resolve;
+                img.onerror = reject;
+            });
+        }
+
+        async function createGrid() {
+            const container = document.getElementById('grid-container');
+            const loadingIndicator = document.getElementById('loading');
+            const content = document.querySelector('.content');
+
+            try {
+                container.innerHTML = '';
+
+                const imgOriginalSize = 504; // Replace with your image's original size in pixels
+                const displayScale = 0.75;    // Images displayed at 75% of original size
+                const desiredVideoScale = 0.8; // Video occupies 80% of the viewport
+                const minCellSize = 100;     // Minimum cell size in pixels
+                const maxCellSize = imgOriginalSize * displayScale; // Maximum cell size
+
+                // Get viewport dimensions considering mobile address bars
+                const viewportWidth = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
+                const viewportHeight = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0);
+
+                // Calculate image display size ensuring the center item is fully visible and responsive
+                let cellSize = Math.min(
+                    maxCellSize,
+                    Math.max(
+                        minCellSize,
+                        Math.min(viewportWidth, viewportHeight) * desiredVideoScale
+                    )
+                );
+
+                // Calculate number of columns and rows needed to cover the viewport
+                let cols = Math.ceil(viewportWidth / cellSize) + 0; // Add extra columns to ensure coverage
+                let rows = Math.ceil(viewportHeight / cellSize) + 0; // Add extra rows to ensure coverage
+
+                // Ensure cols and rows are odd numbers to have a center cell
+                if (cols % 2 === 0) cols += 1;
+                if (rows % 2 === 0) rows += 1;
+
+                // Calculate total grid width and height
+                const gridWidth = cols * cellSize;
+                const gridHeight = rows * cellSize;
+
+                // Calculate grid container's left and top to center the center cell
+                const centerCol = Math.floor(cols / 2);
+                const centerRow = Math.floor(rows / 2);
+
+                const gridLeft = (viewportWidth / 2) - (cellSize / 2) - (centerCol * cellSize);
+                const gridTop = (viewportHeight / 2) - (cellSize / 2) - (centerRow * cellSize);
+
+                // Set grid container's style
+                container.style.width = `${gridWidth}px`;
+                container.style.height = `${gridHeight}px`;
+                container.style.left = `${gridLeft}px`;
+                container.style.top = `${gridTop}px`;
+
+                // Set grid template columns and rows
+                container.style.display = 'grid'; // Ensure the grid is displayed
+                container.style.gridTemplateColumns = `repeat(${cols}, ${cellSize}px)`;
+                container.style.gridTemplateRows = `repeat(${rows}, ${cellSize}px)`;
+
+                // Generate grid items
+                for (let row = 0; row < rows; row++) {
+                    for (let col = 0; col < cols; col++) {
+                        const gridItem = document.createElement('div');
+                        gridItem.className = 'grid-item';
+
+                        if (row === centerRow && col === centerCol) {
+                            gridItem.classList.add('center');
+
+                            const video = document.createElement('video');
+                            video.className = 'center-video';
+                            video.muted = true;
+                            video.playsInline = true;
+                            video.setAttribute('preload', 'auto');
+                            video.setAttribute('autoplay', 'true');
+                            video.setAttribute('loop', 'true');
+
+                            // Create source elements
+                            const sourceWebM = document.createElement('source');
+                            sourceWebM.src = 'center.webm';
+                            sourceWebM.type = 'video/webm';
+
+                            const sourceMP4 = document.createElement('source');
+                            sourceMP4.src = 'center.mp4';
+                            sourceMP4.type = 'video/mp4';
+
+                            video.appendChild(sourceWebM);
+                            video.appendChild(sourceMP4);
+
+                            gridItem.appendChild(video);
+                        }
+
+                        container.appendChild(gridItem);
+                    }
+                }
+
+                // Hide the loading indicator
+                if (loadingIndicator) {
+                    loadingIndicator.style.display = 'none';
+                }
+
+                // Trigger the fade-in effect
+                content.style.opacity = '1';
+
+            } catch (error) {
+                console.error('Error loading background image:', error);
+            }
+        }
+
+        // Initialize grid on load and resize
+        window.addEventListener('load', () => {
+            createGrid();
+
+            // Play video after user interaction (for mobile browsers)
+            document.body.addEventListener('touchstart', playCenterVideo, { once: true });
+            document.body.addEventListener('click', playCenterVideo, { once: true });
+        });
+
+        window.addEventListener('resize', createGrid);
+
+        function playCenterVideo() {
+            const video = document.querySelector('.center-video');
+            if (video && video.paused) {
+                video.play().catch(err => {
+                    console.error('Video play failed:', err);
+                });
+            }
+        }
+
+    </script>
+</body>
+</html>
