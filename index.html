@@ -20,7 +20,8 @@
             touch-action: none;
             background-color: black; /* Initial background color */
             transition: filter 1s ease-in-out; /* Smooth transition for inversion */
-            position: relative; /* For positioning the mute button */
+            position: relative; /* For positioning the mute button and credit */
+            font-family: Arial, sans-serif; /* Base font */
         }
 
         /* Gradient overlay */
@@ -93,7 +94,7 @@
             right: 20px;
             width: 40px;
             height: 40px;
-            background-color: rgba(255, 255, 255, 0.8);
+            background-color: rgba(255, 255, 255, 0.2);
             border: none;
             border-radius: 50%;
             cursor: pointer;
@@ -105,7 +106,7 @@
         }
 
         .mute-button:hover {
-            background-color: rgba(255, 255, 255, 1);
+            background-color: rgba(255, 255, 255, 0.5);
         }
 
         .mute-button:focus {
@@ -120,6 +121,29 @@
 
         .mute-button.unmuted::before {
             content: '🔊'; /* Icon when unmuted */
+        }
+
+        /* Song Credit */
+        .song-credit {
+            position: fixed;
+            top: 20px; /* Align vertically with mute button */
+            right: 70px; /* Positioned to the left of the mute button */
+            background-color: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            padding: 10px 15px;
+            border-radius: 5px;
+            font-size: 14px;
+            /* Added font-family for Courier New */
+            font-family: "Courier New", monospace;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+            z-index: 3; /* Above other elements */
+        }
+
+        .song-credit.visible {
+            opacity: 1;
+            visibility: visible;
         }
 
         /* Class to invert colors */
@@ -140,6 +164,11 @@
 
     <!-- Mute/Unmute Button -->
     <button class="mute-button" id="mute-button" aria-label="Mute audio"></button>
+
+    <!-- Song Credit -->
+    <div class="song-credit" id="song-credit">
+        🎵 Aquarius by Quentin Sirjacq 🎵
+    </div>
 
     <!-- Audio Element -->
     <audio id="background-audio" src="aquarius_siteperso.mp3" loop muted></audio>
@@ -256,8 +285,8 @@
             createGrid();
 
             // Play video after user interaction (for mobile browsers)
-            document.body.addEventListener('touchstart', playCenterVideo, { once: true });
-            document.body.addEventListener('click', playCenterVideo, { once: true });
+            document.body.addEventListener('touchstart', playMedia, { once: true });
+            document.body.addEventListener('click', playMedia, { once: true });
 
             // Initialize audio
             initializeAudio();
@@ -265,7 +294,7 @@
 
         window.addEventListener('resize', createGrid);
 
-        function playCenterVideo() {
+        function playMedia() {
             const video = document.querySelector('.center-video');
             if (video && video.paused) {
                 video.play().catch(err => {
@@ -286,6 +315,7 @@
         function initializeAudio() {
             const audio = document.getElementById('background-audio');
             const muteButton = document.getElementById('mute-button');
+            const songCredit = document.getElementById('song-credit');
 
             // Attempt to play audio (will be muted by default)
             audio.play().catch(err => {
@@ -299,6 +329,7 @@
             muteButton.addEventListener('click', () => {
                 audio.muted = !audio.muted;
                 updateMuteButton();
+                toggleSongCredit();
             });
         }
 
@@ -312,6 +343,21 @@
             } else {
                 muteButton.classList.add('unmuted');
                 muteButton.setAttribute('aria-label', 'Mute audio');
+            }
+        }
+
+        function toggleSongCredit() {
+            const audio = document.getElementById('background-audio');
+            const songCredit = document.getElementById('song-credit');
+
+            if (!audio.muted) {
+                // Show the credit
+                songCredit.classList.add('visible');
+
+                // Automatically hide after 5 seconds
+                setTimeout(() => {
+                    songCredit.classList.remove('visible');
+                }, 5000);
             }
         }
 
