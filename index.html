@@ -175,8 +175,8 @@
         .color-control-button {
             position: fixed;
             right: 20px;
-            width: 30px; /* Reduced width for smaller size */
-            height: 30px; /* Reduced height for smaller size */
+            width: 40px; /* Reduced width for smaller size */
+            height: 40px; /* Reduced height for smaller size */
             border: none;
             border-radius: 50%; /* Makes the button circular */
             cursor: pointer;
@@ -193,7 +193,7 @@
         }
 
         #inverted-color-button {
-            top: 120px; /* 70px + 30px (button height) + 10px (margin-top) */
+            top: 130px; /* 70px + 40px (button height) + 10px (margin-top) */
             background-color: white; /* White circle for Inverted */
         }
 
@@ -246,6 +246,7 @@
         }
 
         let isFirstClick = true; // Flag to track if the first click has occurred
+        let inputSequence = ''; // To track the user's input sequence
 
         async function createGrid() {
             const container = document.getElementById('grid-container');
@@ -304,8 +305,10 @@
                         gridItem.className = 'grid-item';
 
                         // Set the grid item background image
+                        // Default to 'other.png'
                         gridItem.style.backgroundImage = `url('other.png')`;
 
+                        // Identify the center grid item
                         if (row === centerRow && col === centerCol) {
                             gridItem.classList.add('center');
 
@@ -333,6 +336,11 @@
                                 event.stopPropagation(); // Prevent triggering grid item click if necessary
                                 handleGridItemClick();
                             });
+                        }
+
+                        // **New Condition: Set 'other_txt.png' for the grid item just below the center**
+                        if (row === centerRow + 1 && col === centerCol) {
+                            gridItem.style.backgroundImage = `url('other_txt.png')`;
                         }
 
                         container.appendChild(gridItem);
@@ -523,6 +531,32 @@
                 isFirstClick = false; // Prevent the first click inversion
             });
         });
+
+        // New: Handle Input Sequence
+        document.addEventListener('keydown', (event) => {
+            inputSequence += event.key; // Add the pressed key to the sequence
+
+            // Check if the input sequence matches "alex"
+            if (inputSequence.endsWith('alex')) {
+                switchVideo();
+                inputSequence = ''; // Reset the sequence
+            }
+
+            // Limit the length of the input sequence to avoid memory issues
+            if (inputSequence.length > 5) {
+                inputSequence = inputSequence.slice(1);
+            }
+        });
+
+        function switchVideo() {
+            const video = document.querySelector('.center-video source');
+            if (video) {
+                video.src = 'center2.webm'; // Switch to center2.webm
+                const videoElement = document.querySelector('.center-video');
+                videoElement.load(); // Reload the video element
+                videoElement.play(); // Play the new video
+            }
+        }
 
     </script>
 </body>
