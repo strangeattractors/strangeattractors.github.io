@@ -267,11 +267,26 @@ document.addEventListener('keydown', (event) => {
 });
 
 function switchVideo() {
-    const video = document.querySelector('.center-video source');
-    if (video) {
-        video.src = 'center2.webm';
-        const videoElement = document.querySelector('.center-video');
-        videoElement.load();
-        videoElement.play();
+    const videoElement = document.querySelector('.center-video');
+    const videoSource = document.querySelector('.center-video source');
+
+    if (videoElement && videoSource) {
+        // Add the fade-out effect
+        videoElement.classList.add('fade-out');
+
+        // Wait for the fade-out to complete before switching the video source
+        setTimeout(() => {
+            // Change the video source
+            videoSource.src = 'center2.webm';
+            videoElement.load();
+
+            // Once the new video is loaded, fade it in
+            videoElement.onloadeddata = () => {
+                videoElement.classList.remove('fade-out');
+                videoElement.classList.add('fade-in');
+                videoElement.play();
+            };
+        }, 1000);  // This should match the duration of the CSS transition
     }
 }
+

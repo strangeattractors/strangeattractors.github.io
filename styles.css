@@ -172,3 +172,13 @@ html, body {
 .color-control-button:focus {
     outline: none;
 }
+
+.fade-out {
+    opacity: 0;
+    transition: opacity 1s ease-in-out;
+}
+
+.fade-in {
+    opacity: 1;
+    transition: opacity 1s ease-in-out;
+}
