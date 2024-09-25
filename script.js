@@ -299,3 +299,11 @@ function switchVideo() {
     }
 }
 
+document.addEventListener('DOMContentLoaded', () => {
+    const infoButton = document.getElementById('info-button');
+    const infoText = document.getElementById('info-text');
+
+    infoButton.addEventListener('click', () => {
+        infoText.classList.toggle('visible');
+    });
+});

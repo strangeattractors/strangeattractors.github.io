@@ -182,3 +182,57 @@ html, body {
     opacity: 1;
     transition: opacity 1s ease-in-out;
 }
+
+/* Info Button at the bottom left corner */
+.info-button {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    width: 40px;
+    height: 40px;
+    background-color: rgba(255, 255, 255, 0.2);
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 3;
+    transition: background-color 0.3s ease;
+    font-size: 20px;
+    font-family: "Courier New", monospace;
+}
+
+.info-button:hover {
+    background-color: rgba(255, 255, 255, 0.5);
+}
+
+.info-button:focus {
+    outline: none;
+}
+
+/* Info Text styling with width limit */
+.info-text {
+    position: fixed;
+    bottom: 70px;
+    left: 20px;
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 10px 15px;
+    border-radius: 5px;
+    font-size: 14px;
+    font-family: "Courier New", monospace;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.5s ease, visibility 0.5s ease;
+    z-index: 3;
+
+    /* Set a maximum width to prevent the text from expanding too far */
+    max-width: 400px; /* You can adjust this value */
+    word-wrap: break-word; /* Ensures that the text wraps if it exceeds the width */
+}
+
+.info-text.visible {
+    opacity: 1;
+    visibility: visible;
+}
