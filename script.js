@@ -76,11 +76,22 @@ async function createGrid() {
                     video.setAttribute('autoplay', 'true');
                     video.setAttribute('loop', 'true');
 
+                    // Add the first source: WebM
                     const sourceWebM = document.createElement('source');
                     sourceWebM.src = 'center.webm';
                     sourceWebM.type = 'video/webm';
-
                     video.appendChild(sourceWebM);
+
+                    // Add a fallback source: MP4
+                    const sourceMP4 = document.createElement('source');
+                    sourceMP4.src = 'center.mp4';
+                    sourceMP4.type = 'video/mp4';
+                    video.appendChild(sourceMP4);
+
+                    // Fallback message if the browser can't play any of the formats
+                    const fallbackText = document.createTextNode('Your browser does not support the video tag or the provided formats.');
+                    video.appendChild(fallbackText);
+
                     gridItem.appendChild(video);
 
                     gridItem.addEventListener('click', () => handleGridItemClick());
