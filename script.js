@@ -16,13 +16,22 @@ async function createGrid() {
     try {
         container.innerHTML = '';
 
-        const imgOriginalSize = 504;
-        const displayScale = 0.75;
-        const minCellSize = 100;
-        const maxCellSize = imgOriginalSize * displayScale;
-
         const viewportWidth = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
         const viewportHeight = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0);
+
+        const imgOriginalSize = 504;
+        let displayScale = 0.75;
+
+        // Determine displayScale based on screen width
+        const screenWidth = window.innerWidth;
+
+        if (screenWidth <= 980) { // Mobile devices
+            displayScale = 1;
+        } else { // Desktop and larger screens
+            displayScale = 0.75;
+        }
+        const minCellSize = 100;
+        const maxCellSize = imgOriginalSize * displayScale;
 
         let cellSize = Math.min(maxCellSize, Math.max(minCellSize, Math.min(viewportWidth, viewportHeight)));
 
