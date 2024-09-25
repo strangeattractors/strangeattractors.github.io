@@ -194,19 +194,31 @@ function playMedia() {
     }
 }
 
+let audioInitialized = false;
+
 function initializeAudio() {
     const audio = document.getElementById('background-audio');
     const muteButton = document.getElementById('mute-button');
     const songCredit = document.getElementById('song-credit');
 
-    audio.play().catch(err => {
-        console.error('Audio play failed:', err);
-    });
-
     updateMuteButton();
 
     muteButton.addEventListener('click', () => {
-        audio.muted = !audio.muted;
+        if (!audioInitialized) {
+            // Set the src attribute and play the audio when the user clicks unmute for the first time
+            audio.src = 'aquarius_siteperso.mp3';
+            audioInitialized = true;
+        }
+
+        if (audio.muted) {
+            audio.muted = false;
+            audio.play().catch(err => {
+                console.error('Audio play failed:', err);
+            });
+        } else {
+            audio.muted = true;
+        }
+
         updateMuteButton();
         toggleSongCredit();
     });
