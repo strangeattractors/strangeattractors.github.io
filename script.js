@@ -288,7 +288,7 @@ document.addEventListener('DOMContentLoaded', () => {
 document.addEventListener('keydown', (event) => {
     inputSequence += event.key;
 
-    if (inputSequence.endsWith('alex') || inputSequence.endsWith('couscous') || inputSequence.endsWith('marwa')) {
+    if (inputSequence.endsWith('alex') || inputSequence.endsWith('couscous') || inputSequence.endsWith('marwa') || inputSequence.endsWith('strange')) {
         switchVideo();
         inputSequence = '';
     }
