@@ -63,7 +63,7 @@ async function createGrid() {
                 const gridItem = document.createElement('div');
                 gridItem.className = 'grid-item';
 
-                gridItem.style.backgroundImage = `url('other.png')`;
+                gridItem.style.backgroundImage = `url('other.webp')`;
 
                 if (row === centerRow && col === centerCol) {
                     gridItem.classList.add('center');
@@ -102,7 +102,7 @@ async function createGrid() {
                 }
 
                 if (row === centerRow + 1 && col === centerCol) {
-                    gridItem.style.backgroundImage = `url('other.png')`;
+                    gridItem.style.backgroundImage = `url('other.webp')`;
                 }
 
                 container.appendChild(gridItem);
@@ -288,12 +288,13 @@ document.addEventListener('DOMContentLoaded', () => {
 document.addEventListener('keydown', (event) => {
     inputSequence += event.key;
 
-    if (inputSequence.endsWith('alex')) {
+    if (inputSequence.endsWith('alex') || inputSequence.endsWith('couscous') || inputSequence.endsWith('marwa')) {
         switchVideo();
         inputSequence = '';
     }
 
-    if (inputSequence.length > 5) {
+    // Limit the length of the input sequence to avoid unnecessary memory usage
+    if (inputSequence.length > 9) {
         inputSequence = inputSequence.slice(1);
     }
 });
@@ -328,5 +329,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     infoButton.addEventListener('click', () => {
         infoText.classList.toggle('visible');
+
+        if (infoText.classList.contains('visible')) {
+            // Set a timeout to hide the info-text after 15 seconds (15000 milliseconds)
+            setTimeout(() => {
+                infoText.classList.remove('visible');
+            }, 15000);  // 15 seconds
+        }
     });
 });

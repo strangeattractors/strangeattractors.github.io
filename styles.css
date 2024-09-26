@@ -48,7 +48,7 @@ html, body {
     background-size: cover;
     background-position: center;
     background-color: #000;
-    background-image: url('other.png');
+    background-image: url('other.webp');
 }
 
 .grid-item.center {
@@ -226,13 +226,26 @@ html, body {
     visibility: hidden;
     transition: opacity 0.5s ease, visibility 0.5s ease;
     z-index: 3;
+    line-height: 1.3;
 
     /* Set a maximum width to prevent the text from expanding too far */
     max-width: 400px; /* You can adjust this value */
     word-wrap: break-word; /* Ensures that the text wraps if it exceeds the width */
 }
 
+@media only screen and (max-width: 600px) {
+    .info-text {
+        font-size: 30px; /* Increase font size for mobile */
+    }
+}
+
 .info-text.visible {
     opacity: 1;
     visibility: visible;
+}
+
+/* Style for the highlighted "strange attractors" text */
+.highlight {
+    color: #ffcc00; /* Change to the desired color */
+    font-weight: bold; /* Makes the text bold */
 }
