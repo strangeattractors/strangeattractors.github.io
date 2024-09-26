@@ -66,6 +66,7 @@ html, body {
     display: block;
     background-color: transparent;
     pointer-events: auto;
+    transition: opacity 1s ease-in-out;
 }
 
 .mute-button {
@@ -233,9 +234,11 @@ html, body {
     word-wrap: break-word; /* Ensures that the text wraps if it exceeds the width */
 }
 
-@media only screen and (max-width: 600px) {
+@media only screen and (max-width: 980px) {
     .info-text {
         font-size: 30px; /* Increase font size for mobile */
+        max-width: none;
+        right: 20px;
     }
 }
 

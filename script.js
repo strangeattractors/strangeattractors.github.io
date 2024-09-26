@@ -10,6 +10,8 @@ function preloadImage(src) {
 
 let isFirstClick = true;
 let inputSequence = '';
+let clickCount = 0; // Track the number of clicks on the video
+let currentVideo = 1; // Track the current video (1 or 2)
 
 async function createGrid() {
     const container = document.getElementById('grid-container');
@@ -70,11 +72,12 @@ async function createGrid() {
 
                     const video = document.createElement('video');
                     video.className = 'center-video';
-                    video.muted = true;
+                    video.muted = true; // Keep muted initially
                     video.playsInline = true;
+                    // Removed the autoplay attribute entirely
                     video.setAttribute('preload', 'auto');
-                    video.setAttribute('autoplay', 'true');
                     video.setAttribute('loop', 'true');
+                    video.setAttribute('poster', 'center.webp'); // Add this line for the poster image
 
                     // Add the first source: WebM
                     const sourceWebM = document.createElement('source');
@@ -97,7 +100,7 @@ async function createGrid() {
                     gridItem.addEventListener('click', () => handleGridItemClick());
                     video.addEventListener('click', (event) => {
                         event.stopPropagation();
-                        handleGridItemClick();
+                        handleVideoClick(); // Updated to call handleVideoClick
                     });
                 }
 
@@ -119,6 +122,28 @@ function handleGridItemClick() {
         isFirstClick = false;
     } else {
         applyRandomFilter();
+    }
+}
+
+function handleVideoClick() {
+    const video = document.querySelector('.center-video');
+
+    if (video) {
+        if (video.paused) {
+            // Play the video only if it is paused
+            video.play().catch(err => {
+                console.error('Video play failed:', err);
+            });
+            clickCount = 1; // Reset clickCount to 1 after playing the video
+        } else {
+            // Handle subsequent clicks for switching colors
+            if (clickCount === 1) {
+                applyInversion(); // Apply inversion on the second click
+                clickCount++; // Increment clickCount
+            } else {
+                applyRandomFilter(); // Apply random filter on subsequent clicks
+            }
+        }
     }
 }
 
@@ -179,19 +204,7 @@ window.addEventListener('load', () => {
 window.addEventListener('resize', createGrid);
 
 function playMedia() {
-    const video = document.querySelector('.center-video');
-    if (video && video.paused) {
-        video.play().catch(err => {
-            console.error('Video play failed:', err);
-        });
-    }
-
-    const audio = document.getElementById('background-audio');
-    if (audio && audio.paused) {
-        audio.play().catch(err => {
-            console.error('Audio play failed:', err);
-        });
-    }
+    // This function can remain empty or be used for other media controls
 }
 
 let audioInitialized = false;
@@ -304,22 +317,37 @@ function switchVideo() {
     const videoSource = document.querySelector('.center-video source');
 
     if (videoElement && videoSource) {
-        // Add the fade-out effect
+        // Start fade-out
         videoElement.classList.add('fade-out');
 
-        // Wait for the fade-out to complete before switching the video source
+        // Wait for the fade-out to complete
         setTimeout(() => {
-            // Change the video source
-            videoSource.src = 'center2.webm';
+            // Switch video sources
+            if (currentVideo === 1) {
+                videoSource.src = 'center2.webm'; // Switch to the second video
+                currentVideo = 2; // Update the current video tracker
+            } else {
+                videoSource.src = 'center.webm'; // Switch back to the first video
+                currentVideo = 1; // Update the current video tracker
+            }
+
+            // Load the new video source
             videoElement.load();
 
-            // Once the new video is loaded, fade it in
+            // Listen for the video to be ready to play
             videoElement.onloadeddata = () => {
+                // Start fade-in after the video is loaded
                 videoElement.classList.remove('fade-out');
                 videoElement.classList.add('fade-in');
+
                 videoElement.play();
+
+                // Reset the fade-in effect for the next transition
+                setTimeout(() => {
+                    videoElement.classList.remove('fade-in'); // Remove fade-in after it has played
+                }, 1000); // Match the transition duration
             };
-        }, 1000);  // This should match the duration of the CSS transition
+        }, 1000); // Match this duration to the fade-out duration
     }
 }
 
