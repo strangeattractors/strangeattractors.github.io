@@ -74,7 +74,7 @@ async function createGrid() {
                     video.className = 'center-video';
                     video.muted = true; // Keep muted initially
                     video.playsInline = true;
-                    // Removed the autoplay attribute entirely
+                    video.autoplay = true; // Added autoplay attribute
                     video.setAttribute('preload', 'auto');
                     video.setAttribute('loop', 'true');
                     video.setAttribute('poster', 'center.webp'); // Add this line for the poster image
@@ -126,25 +126,12 @@ function handleGridItemClick() {
 }
 
 function handleVideoClick() {
-    const video = document.querySelector('.center-video');
-
-    if (video) {
-        if (video.paused) {
-            // Play the video only if it is paused
-            video.play().catch(err => {
-                console.error('Video play failed:', err);
-            });
-            clickCount = 1; // Reset clickCount to 1 after playing the video
-        } else {
-            // Handle subsequent clicks for switching colors
-            if (clickCount === 1) {
-                applyInversion(); // Apply inversion on the second click
-                clickCount++; // Increment clickCount
-            } else {
-                applyRandomFilter(); // Apply random filter on subsequent clicks
-            }
-        }
+    if (clickCount === 0) {
+        applyInversion(); // Apply inversion on the first click
+    } else {
+        applyRandomFilter(); // Apply random filter on subsequent clicks
     }
+    clickCount++; // Increment clickCount
 }
 
 function applyInversion() {
