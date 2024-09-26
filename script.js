@@ -77,7 +77,7 @@ async function createGrid() {
                     video.autoplay = true; // Added autoplay attribute
                     video.setAttribute('preload', 'auto');
                     video.setAttribute('loop', 'true');
-                    video.setAttribute('poster', 'center.webp'); // Add this line for the poster image
+//                    video.setAttribute('poster', 'center.webp'); // Add this line for the poster image
 
                     // Add the first source: WebM
                     const sourceWebM = document.createElement('source');
