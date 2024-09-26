@@ -314,9 +314,10 @@ document.addEventListener('keydown', (event) => {
 
 function switchVideo() {
     const videoElement = document.querySelector('.center-video');
-    const videoSource = document.querySelector('.center-video source');
+    const webmSource = document.querySelector('.center-video source[type="video/webm"]');
+    const mp4Source = document.querySelector('.center-video source[type="video/mp4"]');
 
-    if (videoElement && videoSource) {
+    if (videoElement && webmSource && mp4Source) {
         // Start fade-out
         videoElement.classList.add('fade-out');
 
@@ -324,14 +325,16 @@ function switchVideo() {
         setTimeout(() => {
             // Switch video sources
             if (currentVideo === 1) {
-                videoSource.src = 'center2.webm'; // Switch to the second video
+                webmSource.src = 'center2.webm';  // Switch to the second WebM video
+                mp4Source.src = 'center2.mp4';    // Switch to the second MP4 video as a fallback
                 currentVideo = 2; // Update the current video tracker
             } else {
-                videoSource.src = 'center.webm'; // Switch back to the first video
+                webmSource.src = 'center.webm';   // Switch back to the first WebM video
+                mp4Source.src = 'center.mp4';     // Switch back to the first MP4 video as a fallback
                 currentVideo = 1; // Update the current video tracker
             }
 
-            // Load the new video source
+            // Load the new video sources
             videoElement.load();
 
             // Listen for the video to be ready to play
