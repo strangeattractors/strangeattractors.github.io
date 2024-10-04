@@ -79,17 +79,17 @@ async function createGrid() {
                     video.setAttribute('loop', 'true');
 //                    video.setAttribute('poster', 'center.webp'); // Add this line for the poster image
 
-                    // Add the first source: WebM
+                    // Add the first source: MP4
+                    const sourceMP4 = document.createElement('source');
+                    sourceMP4.src = 'center.mov';
+                    sourceMP4.type = 'video/mp4';
+                    video.appendChild(sourceMP4);
+
+                    // Add a fallback source: WebM
                     const sourceWebM = document.createElement('source');
                     sourceWebM.src = 'center.webm';
                     sourceWebM.type = 'video/webm';
                     video.appendChild(sourceWebM);
-
-                    // Add a fallback source: MP4
-                    const sourceMP4 = document.createElement('source');
-                    sourceMP4.src = 'center.mp4';
-                    sourceMP4.type = 'video/mp4';
-                    video.appendChild(sourceMP4);
 
                     // Fallback message if the browser can't play any of the formats
                     const fallbackText = document.createTextNode('Your browser does not support the video tag or the provided formats.');
@@ -317,7 +317,7 @@ function switchVideo() {
                 currentVideo = 2; // Update the current video tracker
             } else {
                 webmSource.src = 'center.webm';   // Switch back to the first WebM video
-                mp4Source.src = 'center.mp4';     // Switch back to the first MP4 video as a fallback
+                mp4Source.src = 'center.mov';     // Switch back to the first MP4 video as a fallback
                 currentVideo = 1; // Update the current video tracker
             }
 
