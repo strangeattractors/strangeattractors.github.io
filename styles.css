@@ -46,11 +46,11 @@ html, body {
 /* Center grid item */
 .grid-item.center {
     position: relative;
+    cursor: pointer;
 }
 
 /* Video styles */
 .center-video {
-    cursor: grab;
     position: absolute;
     top: 0;
     left: 0;
@@ -62,10 +62,6 @@ html, body {
     pointer-events: auto;
     transition: opacity 1s ease-in-out;
     z-index: 2;
-}
-
-.center-video:active {
-    cursor: grabbing;
 }
 
 /* Mute button styles */
@@ -263,7 +259,7 @@ html, body {
     left: 0;
     width: 100%;
     height: 100%;
-    background: radial-gradient(circle at center, rgba(0, 0, 0, 0) 30px, rgba(0, 0, 0, 1) 100%);
+    background: radial-gradient(circle at center, rgba(0, 0, 0, 0) 356px, rgba(0, 0, 0, 1) 100%);
     pointer-events: none;
     transition: background 1s ease-in-out;
 }

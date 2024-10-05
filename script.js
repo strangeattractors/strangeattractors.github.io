@@ -67,7 +67,6 @@ async function createGrid() {
                     video.autoplay = true; // Added autoplay attribute
                     video.setAttribute('preload', 'auto');
                     video.setAttribute('loop', 'true');
-                    video.style.cursor = 'grab'; // Cursor style for dragging
                     video.style.position = 'absolute'; // Absolute positioning
                     video.style.top = '0';
                     video.style.left = '0';
@@ -93,90 +92,8 @@ async function createGrid() {
 
                     gridItem.appendChild(video);
 
-                    // Variables for dragging
-                    let isDragging = false;
-                    let isTap = true;
-                    let startX, startY, currentX = 0, currentY = 0;
-
-                    // Add event listeners for mouse and touch events
-                    video.addEventListener('mousedown', startDrag);
-                    video.addEventListener('touchstart', startDrag, { passive: false });
-
-                    function startDrag(e) {
-                        e.preventDefault();
-                        isDragging = true;
-                        isTap = true; // Assume it's a tap until movement is detected
-                        video.style.cursor = 'grabbing';
-
-                        if (e.type === 'mousedown') {
-                            startX = e.clientX;
-                            startY = e.clientY;
-                        } else {
-                            startX = e.touches[0].clientX;
-                            startY = e.touches[0].clientY;
-                        }
-
-                        document.addEventListener('mousemove', drag);
-                        document.addEventListener('mouseup', endDrag);
-                        document.addEventListener('touchmove', drag, { passive: false });
-                        document.addEventListener('touchend', endDrag);
-                    }
-
-                    function drag(e) {
-                        if (!isDragging) return;
-                        e.preventDefault();
-
-                        let currentMouseX, currentMouseY;
-                        if (e.type === 'mousemove') {
-                            currentMouseX = e.clientX;
-                            currentMouseY = e.clientY;
-                        } else {
-                            currentMouseX = e.touches[0].clientX;
-                            currentMouseY = e.touches[0].clientY;
-                        }
-
-                        let dx = currentMouseX - startX;
-                        let dy = currentMouseY - startY;
-
-                        currentX += dx;
-                        currentY += dy;
-
-                        video.style.transform = `translate(${currentX}px, ${currentY}px)`;
-
-                        // If the movement is more than a threshold, consider it a drag, not a tap
-                        if (Math.abs(dx) > 10 || Math.abs(dy) > 10) {
-                            isTap = false;
-                        }
-
-                        startX = currentMouseX;
-                        startY = currentMouseY;
-                    }
-
-                    function endDrag(e) {
-                        if (isDragging) {
-                            isDragging = false;
-                            video.style.cursor = 'grab';
-
-                            document.removeEventListener('mousemove', drag);
-                            document.removeEventListener('mouseup', endDrag);
-                            document.removeEventListener('touchmove', drag);
-                            document.removeEventListener('touchend', endDrag);
-
-                            if (isTap) {
-                                // It was a tap (click), not a drag
-                                e.stopPropagation();
-                                handleVideoClick();
-                            }
-                        }
-                    }
-
-                    // Handle touchend separately if no dragging occurred
-                    video.addEventListener('touchend', (event) => {
-                        if (!isDragging && isTap) {
-                            event.stopPropagation();
-                            handleVideoClick();
-                        }
-                    });
+                    // Add click event listener
+                    video.addEventListener('click', handleVideoClick);
                 }
 
                 container.appendChild(gridItem);
@@ -207,7 +124,6 @@ function applyInversion() {
     }
 }
 
-
 function applyOriginalColor() {
     const content = document.querySelector('.content');
     if (content) {
@@ -222,7 +138,6 @@ function applyOriginalColor() {
         `;
     }
 }
-
 
 function applyRandomFilter() {
     const content = document.querySelector('.content');
@@ -261,7 +176,6 @@ window.addEventListener('load', () => {
 });
 
 window.addEventListener('resize', createGrid);
-
 
 let audioInitialized = false;
 
