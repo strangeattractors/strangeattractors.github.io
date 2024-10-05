@@ -107,11 +107,12 @@ async function createGrid() {
                     gridItem.addEventListener('click', () => handleGridItemClick());
                     video.addEventListener('click', (event) => {
                         event.stopPropagation();
-                        handleVideoClick(); // Updated to call handleVideoClick
+                        handleVideoClick();
                     });
 
                     // Variables for dragging
                     let isDragging = false;
+                    let isTap = true;
                     let startX, startY, currentX = 0, currentY = 0;
 
                     // Add event listeners for mouse and touch events
@@ -121,6 +122,7 @@ async function createGrid() {
                     function startDrag(e) {
                         e.preventDefault();
                         isDragging = true;
+                        isTap = true; // Assume it's a tap until movement is detected
                         video.style.cursor = 'grabbing';
 
                         if (e.type === 'mousedown') {
@@ -158,19 +160,40 @@ async function createGrid() {
 
                         video.style.transform = `translate(${currentX}px, ${currentY}px)`;
 
+                        // If the movement is more than a threshold, consider it a drag, not a tap
+                        if (Math.abs(dx) > 10 || Math.abs(dy) > 10) {
+                            isTap = false;
+                        }
+
                         startX = currentMouseX;
                         startY = currentMouseY;
                     }
 
-                    function endDrag() {
-                        isDragging = false;
-                        video.style.cursor = 'grab';
+                    function endDrag(e) {
+                        if (isDragging) {
+                            isDragging = false;
+                            video.style.cursor = 'grab';
 
-                        document.removeEventListener('mousemove', drag);
-                        document.removeEventListener('mouseup', endDrag);
-                        document.removeEventListener('touchmove', drag);
-                        document.removeEventListener('touchend', endDrag);
+                            document.removeEventListener('mousemove', drag);
+                            document.removeEventListener('mouseup', endDrag);
+                            document.removeEventListener('touchmove', drag);
+                            document.removeEventListener('touchend', endDrag);
+
+                            if (isTap) {
+                                // It was a tap, not a drag
+                                e.stopPropagation();
+                                handleVideoClick();
+                            }
+                        }
                     }
+
+                    // Handle touchend separately if no dragging occurred
+                    video.addEventListener('touchend', (event) => {
+                        if (!isDragging && isTap) {
+                            event.stopPropagation();
+                            handleVideoClick();
+                        }
+                    });
                 }
 
                 container.appendChild(gridItem);
