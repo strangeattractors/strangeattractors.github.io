@@ -1,14 +1,3 @@
-// Function to preload images if necessary (optional)
-function preloadImage(src) {
-    return new Promise((resolve, reject) => {
-        const img = new Image();
-        img.src = src;
-        img.onload = resolve;
-        img.onerror = reject;
-    });
-}
-
-let isFirstClick = true;
 let inputSequence = '';
 let clickCount = 0; // Track the number of clicks on the video
 let currentVideo = 1; // Track the current video (1 or 2)
@@ -22,11 +11,11 @@ async function createGrid() {
         const viewportHeight = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0);
 
         const imgOriginalSize = 504;
-        let displayScale = 0.75;
 
         // Determine displayScale based on screen width
         const screenWidth = window.innerWidth;
 
+        let displayScale;
         if (screenWidth <= 980) { // Mobile devices
             displayScale = 1;
         } else { // Desktop and larger screens
@@ -104,12 +93,6 @@ async function createGrid() {
 
                     gridItem.appendChild(video);
 
-                    gridItem.addEventListener('click', () => handleGridItemClick());
-                    video.addEventListener('click', (event) => {
-                        event.stopPropagation();
-                        handleVideoClick();
-                    });
-
                     // Variables for dragging
                     let isDragging = false;
                     let isTap = true;
@@ -180,7 +163,7 @@ async function createGrid() {
                             document.removeEventListener('touchend', endDrag);
 
                             if (isTap) {
-                                // It was a tap, not a drag
+                                // It was a tap (click), not a drag
                                 e.stopPropagation();
                                 handleVideoClick();
                             }
@@ -204,21 +187,8 @@ async function createGrid() {
     }
 }
 
-function handleGridItemClick() {
-    if (isFirstClick) {
-        applyInversion();
-        isFirstClick = false;
-    } else {
-        applyRandomFilter();
-    }
-}
-
 function handleVideoClick() {
-    if (clickCount === 0) {
-        applyInversion(); // Apply inversion on the first click
-    } else {
-        applyRandomFilter(); // Apply random filter on subsequent clicks
-    }
+    applyRandomFilter(); // Apply random filter on subsequent clicks
     clickCount++; // Increment clickCount
 }
 
@@ -236,6 +206,23 @@ function applyInversion() {
         `;
     }
 }
+
+
+function applyOriginalColor() {
+    const content = document.querySelector('.content');
+    if (content) {
+        content.style.filter = `
+            invert(0%)
+            hue-rotate(0deg)
+            brightness(1)
+            contrast(1)
+            saturate(1)
+            sepia(0)
+            grayscale(0)
+        `;
+    }
+}
+
 
 function applyRandomFilter() {
     const content = document.querySelector('.content');
@@ -264,9 +251,6 @@ function applyRandomFilter() {
 window.addEventListener('load', () => {
     createGrid();
 
-    document.body.addEventListener('touchstart', playMedia, { once: true });
-    document.body.addEventListener('click', playMedia, { once: true });
-
     initializeAudio();
 
     const loadingOverlay = document.getElementById('loading-overlay');
@@ -278,9 +262,6 @@ window.addEventListener('load', () => {
 
 window.addEventListener('resize', createGrid);
 
-function playMedia() {
-    // This function can remain empty or be used for other media controls
-}
 
 let audioInitialized = false;
 
@@ -342,35 +323,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const invertedButton = document.getElementById('inverted-color-button');
     const content = document.querySelector('.content');
 
-    originalButton.addEventListener('click', () => {
-        if (content) {
-            content.style.filter = `
-                invert(0%)
-                hue-rotate(0deg)
-                brightness(1)
-                contrast(1)
-                saturate(1)
-                sepia(0)
-                grayscale(0)
-            `;
-        }
-        isFirstClick = false;
-    });
+    originalButton.addEventListener('click', () => {applyOriginalColor()});
 
-    invertedButton.addEventListener('click', () => {
-        if (content) {
-            content.style.filter = `
-                invert(100%)
-                hue-rotate(0deg)
-                brightness(1)
-                contrast(1)
-                saturate(1)
-                sepia(0)
-                grayscale(0)
-            `;
-        }
-        isFirstClick = false;
-    });
+    invertedButton.addEventListener('click', () => {applyInversion()});
 });
 
 document.addEventListener('keydown', (event) => {
