@@ -28,7 +28,7 @@ html, body {
     left: 0;
     width: 100%;
     height: 100%;
-    background: radial-gradient(circle at center, rgba(0, 0, 0, 0) 356px, rgba(0, 0, 0, 1) 100%);
+    background: radial-gradient(circle at center, rgba(0, 0, 0, 0) 30px, rgba(0, 0, 0, 1) 100%);
     pointer-events: none;
     transition: background 1s ease-in-out;
 }
@@ -49,10 +49,6 @@ html, body {
     background-position: center;
     background-color: #000;
     background-image: url('other.webp');
-}
-
-.grid-item.center {
-    cursor: pointer;
 }
 
 .center-video {
@@ -250,4 +246,20 @@ html, body {
 /* Style for the highlighted "strange attractors" text */
 .highlight {
     color: #ffcc00; /* Change to the desired color */
+}
+
+
+.center-video {
+    cursor: grab;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.center-video:active {
+    cursor: grabbing;
+}
+
+.grid-item.center {
+    position: relative;
 }

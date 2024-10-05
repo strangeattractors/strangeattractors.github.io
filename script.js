@@ -69,6 +69,7 @@ async function createGrid() {
 
                 if (row === centerRow && col === centerCol) {
                     gridItem.classList.add('center');
+                    gridItem.style.position = 'relative'; // Added for absolute positioning of video
 
                     const video = document.createElement('video');
                     video.className = 'center-video';
@@ -77,7 +78,10 @@ async function createGrid() {
                     video.autoplay = true; // Added autoplay attribute
                     video.setAttribute('preload', 'auto');
                     video.setAttribute('loop', 'true');
-//                    video.setAttribute('poster', 'center.webp'); // Add this line for the poster image
+                    video.style.cursor = 'grab'; // Cursor style for dragging
+                    video.style.position = 'absolute'; // Absolute positioning
+                    video.style.top = '0';
+                    video.style.left = '0';
 
                     // Add the first source: MP4
                     const sourceMP4 = document.createElement('source');
@@ -102,6 +106,105 @@ async function createGrid() {
                         event.stopPropagation();
                         handleVideoClick(); // Updated to call handleVideoClick
                     });
+
+                    // Variables for dragging
+                    let isDragging = false;
+                    let startX, startY, currentX = 0, currentY = 0;
+                    let velocityX = 0, velocityY = 0;
+                    let lastTime = 0;
+                    let lastX = 0, lastY = 0;
+                    let animationFrameId = null;
+
+                    // Add event listeners for mouse and touch events
+                    video.addEventListener('mousedown', startDrag);
+                    video.addEventListener('touchstart', startDrag, { passive: false });
+
+                    function startDrag(e) {
+                        e.preventDefault();
+                        isDragging = true;
+                        video.style.cursor = 'grabbing';
+
+                        if (e.type === 'mousedown') {
+                            startX = e.clientX;
+                            startY = e.clientY;
+                        } else {
+                            startX = e.touches[0].clientX;
+                            startY = e.touches[0].clientY;
+                        }
+
+                        lastX = startX;
+                        lastY = startY;
+                        lastTime = Date.now();
+
+                        document.addEventListener('mousemove', drag);
+                        document.addEventListener('mouseup', endDrag);
+                        document.addEventListener('touchmove', drag, { passive: false });
+                        document.addEventListener('touchend', endDrag);
+                    }
+
+                    function drag(e) {
+                        if (!isDragging) return;
+                        e.preventDefault();
+
+                        let currentMouseX, currentMouseY;
+                        if (e.type === 'mousemove') {
+                            currentMouseX = e.clientX;
+                            currentMouseY = e.clientY;
+                        } else {
+                            currentMouseX = e.touches[0].clientX;
+                            currentMouseY = e.touches[0].clientY;
+                        }
+
+                        let dx = currentMouseX - startX;
+                        let dy = currentMouseY - startY;
+
+                        currentX += dx;
+                        currentY += dy;
+
+                        video.style.transform = `translate(${currentX}px, ${currentY}px)`;
+
+                        let currentTime = Date.now();
+                        let deltaTime = currentTime - lastTime;
+
+                        velocityX = (currentMouseX - lastX) / deltaTime;
+                        velocityY = (currentMouseY - lastY) / deltaTime;
+
+                        lastX = currentMouseX;
+                        lastY = currentMouseY;
+                        lastTime = currentTime;
+
+                        startX = currentMouseX;
+                        startY = currentMouseY;
+                    }
+
+                    function endDrag() {
+                        isDragging = false;
+                        video.style.cursor = 'grab';
+
+                        document.removeEventListener('mousemove', drag);
+                        document.removeEventListener('mouseup', endDrag);
+                        document.removeEventListener('touchmove', drag);
+                        document.removeEventListener('touchend', endDrag);
+
+                        // Start inertia movement
+                        inertia();
+                    }
+
+                    function inertia() {
+                        velocityX *= 0.95; // Friction factor
+                        velocityY *= 0.95;
+
+                        currentX += velocityX * 16; // Assuming 60fps (~16ms per frame)
+                        currentY += velocityY * 16;
+
+                        video.style.transform = `translate(${currentX}px, ${currentY}px)`;
+
+                        if (Math.abs(velocityX) > 0.1 || Math.abs(velocityY) > 0.1) {
+                            animationFrameId = requestAnimationFrame(inertia);
+                        } else {
+                            cancelAnimationFrame(animationFrameId);
+                        }
+                    }
                 }
 
                 if (row === centerRow + 1 && col === centerCol) {
@@ -313,7 +416,7 @@ function switchVideo() {
             // Switch video sources
             if (currentVideo === 1) {
                 webmSource.src = 'center2.webm';  // Switch to the second WebM video
-                mp4Source.src = 'center2.mp4';    // Switch to the second MP4 video as a fallback
+                mp4Source.src = 'center2.mov';    // Switch to the second MP4 video as a fallback
                 currentVideo = 2; // Update the current video tracker
             } else {
                 webmSource.src = 'center.webm';   // Switch back to the first WebM video
