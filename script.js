@@ -82,6 +82,9 @@ async function createGrid() {
                     video.style.position = 'absolute'; // Absolute positioning
                     video.style.top = '0';
                     video.style.left = '0';
+                    video.style.width = '100%';
+                    video.style.height = '100%';
+                    video.style.objectFit = 'cover';
 
                     // Add the first source: MP4
                     const sourceMP4 = document.createElement('source');
@@ -110,10 +113,6 @@ async function createGrid() {
                     // Variables for dragging
                     let isDragging = false;
                     let startX, startY, currentX = 0, currentY = 0;
-                    let velocityX = 0, velocityY = 0;
-                    let lastTime = 0;
-                    let lastX = 0, lastY = 0;
-                    let animationFrameId = null;
 
                     // Add event listeners for mouse and touch events
                     video.addEventListener('mousedown', startDrag);
@@ -131,10 +130,6 @@ async function createGrid() {
                             startX = e.touches[0].clientX;
                             startY = e.touches[0].clientY;
                         }
-
-                        lastX = startX;
-                        lastY = startY;
-                        lastTime = Date.now();
 
                         document.addEventListener('mousemove', drag);
                         document.addEventListener('mouseup', endDrag);
@@ -163,16 +158,6 @@ async function createGrid() {
 
                         video.style.transform = `translate(${currentX}px, ${currentY}px)`;
 
-                        let currentTime = Date.now();
-                        let deltaTime = currentTime - lastTime;
-
-                        velocityX = (currentMouseX - lastX) / deltaTime;
-                        velocityY = (currentMouseY - lastY) / deltaTime;
-
-                        lastX = currentMouseX;
-                        lastY = currentMouseY;
-                        lastTime = currentTime;
-
                         startX = currentMouseX;
                         startY = currentMouseY;
                     }
@@ -185,30 +170,7 @@ async function createGrid() {
                         document.removeEventListener('mouseup', endDrag);
                         document.removeEventListener('touchmove', drag);
                         document.removeEventListener('touchend', endDrag);
-
-                        // Start inertia movement
-                        inertia();
                     }
-
-                    function inertia() {
-                        velocityX *= 0.95; // Friction factor
-                        velocityY *= 0.95;
-
-                        currentX += velocityX * 16; // Assuming 60fps (~16ms per frame)
-                        currentY += velocityY * 16;
-
-                        video.style.transform = `translate(${currentX}px, ${currentY}px)`;
-
-                        if (Math.abs(velocityX) > 0.1 || Math.abs(velocityY) > 0.1) {
-                            animationFrameId = requestAnimationFrame(inertia);
-                        } else {
-                            cancelAnimationFrame(animationFrameId);
-                        }
-                    }
-                }
-
-                if (row === centerRow + 1 && col === centerCol) {
-                    gridItem.style.backgroundImage = `url('other.webp')`;
                 }
 
                 container.appendChild(gridItem);
