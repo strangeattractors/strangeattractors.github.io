@@ -246,6 +246,85 @@ html, body {
     visibility: visible;
 }
 
+/* Mission button styles */
+.mission-button {
+    position: fixed;
+    bottom: 20px;
+    left: 70px;
+    background-color: rgba(255, 255, 255, 0.2);
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 3;
+    transition: background-color 0.3s ease;
+    font-size: 14px;
+    font-family: "Courier New", monospace;
+    color: rgba(0, 255, 0, 1);
+    padding: 8px 12px;
+}
+
+.mission-button:hover {
+    background-color: rgba(255, 255, 255, 0.5);
+}
+
+.mission-button:focus {
+    outline: none;
+}
+
+/* Mission text styling */
+.mission-text {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(0, 0, 0, 0.9);
+    color: white;
+    padding: 20px 25px;
+    border-radius: 5px;
+    font-size: 14px;
+    font-family: "Courier New", monospace;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.5s ease, visibility 0.5s ease;
+    z-index: 4;
+    line-height: 1.5;
+    max-width: 500px;
+    word-wrap: break-word;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.mission-text h2 {
+    color: #ffcc00;
+    margin-bottom: 10px;
+    margin-top: 15px;
+}
+
+.mission-text h2:first-child {
+    margin-top: 0;
+}
+
+.mission-text p {
+    margin-bottom: 15px;
+}
+
+.team-list {
+    list-style-type: none;
+    padding: 0;
+}
+
+.team-list li {
+    margin-bottom: 8px;
+}
+
+.mission-text.visible {
+    opacity: 1;
+    visibility: visible;
+}
+
 /* Style for the highlighted text */
 .highlight {
     color: #ffcc00; /* Change to the desired color */

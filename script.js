@@ -301,15 +301,34 @@ function switchVideo() {
 document.addEventListener('DOMContentLoaded', () => {
     const infoButton = document.getElementById('info-button');
     const infoText = document.getElementById('info-text');
+    const missionButton = document.getElementById('mission-button');
+    const missionText = document.getElementById('mission-text');
 
     infoButton.addEventListener('click', () => {
         infoText.classList.toggle('visible');
+        // Close mission text if open
+        missionText.classList.remove('visible');
 
         if (infoText.classList.contains('visible')) {
             // Set a timeout to hide the info-text after 15 seconds (15000 milliseconds)
             setTimeout(() => {
                 infoText.classList.remove('visible');
             }, 15000);  // 15 seconds
+        }
+    });
+    
+    missionButton.addEventListener('click', () => {
+        missionText.classList.toggle('visible');
+        // Close info text if open
+        infoText.classList.remove('visible');
+    });
+    
+    // Close mission text when clicking outside
+    document.addEventListener('click', (event) => {
+        if (missionText.classList.contains('visible') && 
+            !missionText.contains(event.target) && 
+            event.target !== missionButton) {
+            missionText.classList.remove('visible');
         }
     });
 });
