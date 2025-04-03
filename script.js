@@ -146,13 +146,13 @@ function handleVideoClick() {
     const missionText = document.getElementById('mission-text');
     const gridContainer = document.getElementById('grid-container');
     
-    // Show mission text
-    missionText.classList.add('visible');
-    
-    // Shift the grid to the left on larger screens only
+    // First shift the grid (on larger screens only)
     if (window.innerWidth > 980) {
         gridContainer.classList.add('shifted');
     }
+    
+    // Then show mission text (will animate in from right)
+    missionText.classList.add('visible');
     
     // Close info text if open
     document.getElementById('info-text').classList.remove('visible');
@@ -397,19 +397,25 @@ function setupInfoAndMissionButtons() {
         const isMissionVisible = missionText.classList.contains('visible');
         const gridContainer = document.getElementById('grid-container');
         
-        // Toggle mission text visibility
-        missionText.classList.toggle('visible');
-        
-        // Shift grid left when showing mission text, reset when hiding
-        // Only shift on larger screens
-        if (!isMobileView()) {
-            if (!isMissionVisible) {
-                // Shift the grid to the left when showing mission
-                gridContainer.classList.add('shifted');
-            } else {
-                // Reset position when hiding mission text
+        // If we're hiding the mission text
+        if (isMissionVisible) {
+            // First remove visibility class from mission text
+            missionText.classList.remove('visible');
+            
+            // Then reset grid position (only on larger screens)
+            if (!isMobileView()) {
                 gridContainer.classList.remove('shifted');
             }
+        } 
+        // If we're showing the mission text
+        else {
+            // First start grid animation (only on larger screens)
+            if (!isMobileView()) {
+                gridContainer.classList.add('shifted');
+            }
+            
+            // Then make mission text visible
+            missionText.classList.add('visible');
         }
         
         // Close info text if open
