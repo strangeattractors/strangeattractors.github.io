@@ -1,4 +1,9 @@
-/* Reset and basic styles */
+/* 
+ * Strange Attractor Website Styles
+ * Organized by component type
+ */
+
+/* === Base Styles === */
 * {
     margin: 0;
     padding: 0;
@@ -16,14 +21,13 @@ html, body {
     font-family: Arial, sans-serif;
 }
 
-/* Content container */
+/* === Layout Components === */
 .content {
     width: 100%;
     height: 100%;
     transition: filter 1s ease-in-out;
 }
 
-/* Grid container */
 .grid-container {
     position: absolute;
     display: grid;
@@ -32,7 +36,6 @@ html, body {
     height: 100%;
 }
 
-/* Grid item */
 .grid-item {
     position: relative;
     width: 100%;
@@ -43,13 +46,12 @@ html, body {
     background-image: url('other.webp');
 }
 
-/* Center grid item */
 .grid-item.center {
     position: relative;
     cursor: pointer;
 }
 
-/* Video styles */
+/* === Video Elements === */
 .center-video {
     position: absolute;
     top: 0;
@@ -64,7 +66,22 @@ html, body {
     z-index: 2;
 }
 
-/* Mute button styles */
+/* === Button Styles === */
+/* Common button styles */
+.button-base {
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.3s ease;
+}
+
+.button-base:focus {
+    outline: none;
+}
+
+/* Mute button */
 .mute-button {
     position: fixed;
     top: 20px;
@@ -99,44 +116,61 @@ html, body {
     content: '🔊';
 }
 
-/* Song credit styles */
-.song-credit {
+/* Info button */
+.info-button {
     position: fixed;
-    top: 20px;
-    right: 70px;
-    background-color: rgba(0, 0, 0, 0.8);
-    color: #fff;
-    padding: 10px 15px;
+    bottom: 20px;
+    left: 20px;
+    width: 40px;
+    height: 40px;
+    background-color: rgba(255, 255, 255, 0.2);
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 3;
+    transition: background-color 0.3s ease;
+    font-size: 20px;
+    font-family: "Courier New", monospace;
+    color: rgba(0, 255, 0, 1);
+}
+
+.info-button:hover {
+    background-color: rgba(255, 255, 255, 0.5);
+}
+
+.info-button:focus {
+    outline: none;
+}
+
+/* Mission button */
+.mission-button {
+    position: fixed;
+    bottom: 20px;
+    left: 70px;
+    background-color: rgba(255, 255, 255, 0.2);
+    border: none;
     border-radius: 5px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 3;
+    transition: background-color 0.3s ease;
     font-size: 14px;
     font-family: "Courier New", monospace;
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.5s ease, visibility 0.5s ease;
-    z-index: 3;
+    color: rgba(0, 255, 0, 1);
+    padding: 8px 12px;
 }
 
-.song-credit.visible {
-    opacity: 1;
-    visibility: visible;
+.mission-button:hover {
+    background-color: rgba(255, 255, 255, 0.5);
 }
 
-/* Loading overlay styles */
-#loading-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: black;
-    z-index: 4;
-    opacity: 1;
-    transition: opacity 3s ease;
-    pointer-events: none;
-}
-
-#loading-overlay.fade-out {
-    opacity: 0;
+.mission-button:focus {
+    outline: none;
 }
 
 /* Color control buttons */
@@ -173,47 +207,48 @@ html, body {
     outline: none;
 }
 
-/* Fade animations */
-.fade-out {
-    opacity: 0;
-    transition: opacity 1s ease-in-out;
-}
-
-.fade-in {
-    opacity: 1;
-    transition: opacity 1s ease-in-out;
-}
-
-/* Info button at the bottom left corner */
-.info-button {
-    position: fixed;
-    bottom: 20px;
-    left: 20px;
-    width: 40px;
-    height: 40px;
-    background-color: rgba(255, 255, 255, 0.2);
-    border: none;
-    border-radius: 50%;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 3;
-    transition: background-color 0.3s ease;
-    font-size: 20px;
+/* === Text Display Components === */
+/* Common text display styles */
+.text-overlay-base {
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 10px 15px;
+    border-radius: 5px;
     font-family: "Courier New", monospace;
-    color: rgba(0, 255, 0, 1);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.5s ease, visibility 0.5s ease;
+    z-index: 3;
 }
 
-.info-button:hover {
-    background-color: rgba(255, 255, 255, 0.5);
+.text-overlay-base.visible {
+    opacity: 1;
+    visibility: visible;
 }
 
-.info-button:focus {
-    outline: none;
+/* Song credit */
+.song-credit {
+    position: fixed;
+    top: 20px;
+    right: 70px;
+    background-color: rgba(0, 0, 0, 0.8);
+    color: #fff;
+    padding: 10px 15px;
+    border-radius: 5px;
+    font-size: 14px;
+    font-family: "Courier New", monospace;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.5s ease, visibility 0.5s ease;
+    z-index: 3;
 }
 
-/* Info text styling with width limit */
+.song-credit.visible {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Info text */
 .info-text {
     position: fixed;
     bottom: 70px;
@@ -233,48 +268,12 @@ html, body {
     word-wrap: break-word;
 }
 
-@media only screen and (max-width: 980px) {
-    .info-text {
-        font-size: 16px;
-        max-width: none;
-        right: 20px;
-    }
-}
-
 .info-text.visible {
     opacity: 1;
     visibility: visible;
 }
 
-/* Mission button styles */
-.mission-button {
-    position: fixed;
-    bottom: 20px;
-    left: 70px;
-    background-color: rgba(255, 255, 255, 0.2);
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 3;
-    transition: background-color 0.3s ease;
-    font-size: 14px;
-    font-family: "Courier New", monospace;
-    color: rgba(0, 255, 0, 1);
-    padding: 8px 12px;
-}
-
-.mission-button:hover {
-    background-color: rgba(255, 255, 255, 0.5);
-}
-
-.mission-button:focus {
-    outline: none;
-}
-
-/* Mission text styling */
+/* Mission text */
 .mission-text {
     position: fixed;
     top: 50%;
@@ -325,12 +324,31 @@ html, body {
     visibility: visible;
 }
 
-/* Style for the highlighted text */
+/* Highlight color for important text */
 .highlight {
-    color: #ffcc00; /* Change to the desired color */
+    color: #ffcc00;
 }
 
-/* Gradient overlay if needed */
+/* === Utility Classes === */
+/* Loading overlay */
+#loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: black;
+    z-index: 4;
+    opacity: 1;
+    transition: opacity 3s ease;
+    pointer-events: none;
+}
+
+#loading-overlay.fade-out {
+    opacity: 0;
+}
+
+/* Gradient overlay */
 .gradient-overlay {
     position: fixed;
     z-index: 1;
@@ -341,4 +359,26 @@ html, body {
     background: radial-gradient(circle at center, rgba(0, 0, 0, 0) 356px, rgba(0, 0, 0, 1) 100%);
     pointer-events: none;
     transition: background 1s ease-in-out;
+}
+
+/* Fade animations */
+.fade-out {
+    opacity: 0;
+    transition: opacity 1s ease-in-out;
+}
+
+.fade-in {
+    opacity: 1;
+    transition: opacity 1s ease-in-out;
+}
+
+/* === Media Queries === */
+@media only screen and (max-width: 980px) {
+    .info-text {
+        font-size: 16px;
+        max-width: none;
+        right: 20px;
+    }
+    
+    /* Add more responsive adjustments as needed */
 }

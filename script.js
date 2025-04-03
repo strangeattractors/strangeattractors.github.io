@@ -1,7 +1,25 @@
+// Global variables
 let inputSequence = '';
-let clickCount = 0; // Track the number of clicks on the video
-let currentVideo = 1; // Track the current video (1 or 2)
+let clickCount = 0;
+let currentVideo = 1;
+let audioInitialized = false;
 
+// Initialize the application
+document.addEventListener('DOMContentLoaded', () => {
+    setupColorButtons();
+    setupKeyboardListener();
+    setupInfoAndMissionButtons();
+});
+
+window.addEventListener('load', () => {
+    createGrid();
+    initializeAudio();
+    handleLoadingState();
+});
+
+window.addEventListener('resize', createGrid);
+
+// Grid creation
 async function createGrid() {
     const container = document.getElementById('grid-container');
     try {
@@ -9,18 +27,11 @@ async function createGrid() {
 
         const viewportWidth = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
         const viewportHeight = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0);
-
         const imgOriginalSize = 504;
-
+        
         // Determine displayScale based on screen width
         const screenWidth = window.innerWidth;
-
-        let displayScale;
-        if (screenWidth <= 980) { // Mobile devices
-            displayScale = 1;
-        } else { // Desktop and larger screens
-            displayScale = 0.75;
-        }
+        const displayScale = screenWidth <= 980 ? 1 : 0.75;
         const minCellSize = 100;
         const maxCellSize = imgOriginalSize * displayScale;
 
@@ -29,166 +40,134 @@ async function createGrid() {
         let cols = Math.ceil(viewportWidth / cellSize);
         let rows = Math.ceil(viewportHeight / cellSize);
 
+        // Ensure odd number of rows and columns for perfect centering
         if (cols % 2 === 0) cols += 1;
         if (rows % 2 === 0) rows += 1;
 
         const gridWidth = cols * cellSize;
         const gridHeight = rows * cellSize;
-
         const centerCol = Math.floor(cols / 2);
         const centerRow = Math.floor(rows / 2);
 
+        // Calculate grid position to center it
         const gridLeft = (viewportWidth / 2) - (cellSize / 2) - (centerCol * cellSize);
         const gridTop = (viewportHeight / 2) - (cellSize / 2) - (centerRow * cellSize);
 
+        // Set grid container styles
         container.style.width = `${gridWidth}px`;
         container.style.height = `${gridHeight}px`;
         container.style.left = `${gridLeft}px`;
         container.style.top = `${gridTop}px`;
-
         container.style.gridTemplateColumns = `repeat(${cols}, ${cellSize}px)`;
         container.style.gridTemplateRows = `repeat(${rows}, ${cellSize}px)`;
 
+        // Create grid items
         for (let row = 0; row < rows; row++) {
             for (let col = 0; col < cols; col++) {
                 const gridItem = document.createElement('div');
                 gridItem.className = 'grid-item';
-
                 gridItem.style.backgroundImage = `url('other.webp')`;
 
+                // Add center video if this is the center cell
                 if (row === centerRow && col === centerCol) {
-                    gridItem.classList.add('center');
-                    gridItem.style.position = 'relative'; // Added for absolute positioning of video
-
-                    const video = document.createElement('video');
-                    video.className = 'center-video';
-                    video.muted = true; // Keep muted initially
-                    video.playsInline = true;
-                    video.autoplay = true; // Added autoplay attribute
-                    video.setAttribute('preload', 'auto');
-                    video.setAttribute('loop', 'true');
-                    video.style.position = 'absolute'; // Absolute positioning
-                    video.style.top = '0';
-                    video.style.left = '0';
-                    video.style.width = '100%';
-                    video.style.height = '100%';
-                    video.style.objectFit = 'cover';
-
-                    // Add a fallback source: WebM
-                    const sourceWebM = document.createElement('source');
-                    sourceWebM.src = 'center.webm';
-                    sourceWebM.type = 'video/webm';
-                    video.appendChild(sourceWebM);
-
-                    // Add the first source: MP4
-                    const sourceMP4 = document.createElement('source');
-                    sourceMP4.src = 'center.mp4';
-                    sourceMP4.type = 'video/mp4';
-                    video.appendChild(sourceMP4);
-
-                    // Fallback message if the browser can't play any of the formats
-                    const fallbackText = document.createTextNode('Your browser does not support the video tag or the provided formats.');
-                    video.appendChild(fallbackText);
-
-                    gridItem.appendChild(video);
-
-                    // Add click event listener
-                    video.addEventListener('click', handleVideoClick);
+                    createCenterVideo(gridItem);
                 }
 
                 container.appendChild(gridItem);
             }
         }
     } catch (error) {
-        console.error('Error loading background image:', error);
+        console.error('Error creating grid:', error);
     }
 }
 
+function createCenterVideo(gridItem) {
+    gridItem.classList.add('center');
+    gridItem.style.position = 'relative';
+
+    const video = document.createElement('video');
+    video.className = 'center-video';
+    video.muted = true;
+    video.playsInline = true;
+    video.autoplay = true;
+    video.setAttribute('preload', 'auto');
+    video.setAttribute('loop', 'true');
+
+    // Add sources for different formats
+    const sourceWebM = document.createElement('source');
+    sourceWebM.src = 'center.webm';
+    sourceWebM.type = 'video/webm';
+    video.appendChild(sourceWebM);
+
+    const sourceMP4 = document.createElement('source');
+    sourceMP4.src = 'center.mp4';
+    sourceMP4.type = 'video/mp4';
+    video.appendChild(sourceMP4);
+
+    // Fallback message
+    const fallbackText = document.createTextNode('Your browser does not support the video tag or the provided formats.');
+    video.appendChild(fallbackText);
+
+    gridItem.appendChild(video);
+    video.addEventListener('click', handleVideoClick);
+}
+
+// Video interaction
 function handleVideoClick() {
-    applyRandomFilter(); // Apply random filter on subsequent clicks
-    clickCount++; // Increment clickCount
+    applyRandomFilter();
+    clickCount++;
 }
 
-function applyInversion() {
-    const content = document.querySelector('.content');
-    if (content) {
-        content.style.filter = `
-            invert(100%)
-            hue-rotate(0deg)
-            brightness(1)
-            contrast(1)
-            saturate(1)
-            sepia(0)
-            grayscale(0)
-        `;
+function switchVideo() {
+    const videoElement = document.querySelector('.center-video');
+    const webmSource = document.querySelector('.center-video source[type="video/webm"]');
+    const mp4Source = document.querySelector('.center-video source[type="video/mp4"]');
+
+    if (videoElement && webmSource && mp4Source) {
+        // Start fade-out
+        videoElement.classList.add('fade-out');
+
+        // Wait for the fade-out to complete
+        setTimeout(() => {
+            // Switch video sources
+            if (currentVideo === 1) {
+                webmSource.src = 'center2.webm';
+                mp4Source.src = 'center2.mp4';
+                currentVideo = 2;
+            } else {
+                webmSource.src = 'center.webm';
+                mp4Source.src = 'center.mp4';
+                currentVideo = 1;
+            }
+
+            // Load the new video sources
+            videoElement.load();
+
+            // Listen for the video to be ready to play
+            videoElement.onloadeddata = () => {
+                // Start fade-in after the video is loaded
+                videoElement.classList.remove('fade-out');
+                videoElement.classList.add('fade-in');
+                videoElement.play();
+
+                // Reset the fade-in effect for the next transition
+                setTimeout(() => {
+                    videoElement.classList.remove('fade-in');
+                }, 1000);
+            };
+        }, 1000);
     }
 }
 
-function applyOriginalColor() {
-    const content = document.querySelector('.content');
-    if (content) {
-        content.style.filter = `
-            invert(0%)
-            hue-rotate(0deg)
-            brightness(1)
-            contrast(1)
-            saturate(1)
-            sepia(0)
-            grayscale(0)
-        `;
-    }
-}
-
-function applyRandomFilter() {
-    const content = document.querySelector('.content');
-    if (content) {
-        const hueRotate = Math.floor(Math.random() * 360);
-        const brightness = (Math.random() * 0.4) + 0.8;
-        const contrast = (Math.random() * 0.4) + 0.8;
-        const saturate = (Math.random() * 0.4) + 0.8;
-        const sepia = (Math.random() * 0.3).toFixed(2);
-        const grayscale = (Math.random() * 0.3).toFixed(2);
-
-        const filterString = `
-            invert(0%)
-            hue-rotate(${hueRotate}deg)
-            brightness(${brightness})
-            contrast(${contrast})
-            saturate(${saturate})
-            sepia(${sepia})
-            grayscale(${grayscale})
-        `;
-
-        content.style.filter = filterString;
-    }
-}
-
-window.addEventListener('load', () => {
-    createGrid();
-
-    initializeAudio();
-
-    const loadingOverlay = document.getElementById('loading-overlay');
-    loadingOverlay.classList.add('fade-out');
-    loadingOverlay.addEventListener('transitionend', () => {
-        loadingOverlay.parentNode.removeChild(loadingOverlay);
-    });
-});
-
-window.addEventListener('resize', createGrid);
-
-let audioInitialized = false;
-
+// Audio functionality
 function initializeAudio() {
     const audio = document.getElementById('background-audio');
     const muteButton = document.getElementById('mute-button');
-    const songCredit = document.getElementById('song-credit');
 
     updateMuteButton();
 
     muteButton.addEventListener('click', () => {
         if (!audioInitialized) {
-            // Set the src attribute and play the audio when the user clicks unmute for the first time
             audio.src = 'aquarius_siteperso.mp3';
             audioInitialized = true;
         }
@@ -232,73 +211,88 @@ function toggleSongCredit() {
     }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    const originalButton = document.getElementById('original-color-button');
-    const invertedButton = document.getElementById('inverted-color-button');
+// Color filters
+function applyInversion() {
     const content = document.querySelector('.content');
-
-    originalButton.addEventListener('click', () => {applyOriginalColor()});
-
-    invertedButton.addEventListener('click', () => {applyInversion()});
-});
-
-document.addEventListener('keydown', (event) => {
-    inputSequence += event.key;
-
-    if (inputSequence.endsWith('alex') || inputSequence.endsWith('couscous') || inputSequence.endsWith('usquare') || inputSequence.endsWith('strange')) {
-        switchVideo();
-        inputSequence = '';
-    }
-
-    // Limit the length of the input sequence to avoid unnecessary memory usage
-    if (inputSequence.length > 9) {
-        inputSequence = inputSequence.slice(1);
-    }
-});
-
-function switchVideo() {
-    const videoElement = document.querySelector('.center-video');
-    const webmSource = document.querySelector('.center-video source[type="video/webm"]');
-    const mp4Source = document.querySelector('.center-video source[type="video/mp4"]');
-
-    if (videoElement && webmSource && mp4Source) {
-        // Start fade-out
-        videoElement.classList.add('fade-out');
-
-        // Wait for the fade-out to complete
-        setTimeout(() => {
-            // Switch video sources
-            if (currentVideo === 1) {
-                webmSource.src = 'center2.webm';  // Switch to the second WebM video
-                mp4Source.src = 'center2.mov';    // Switch to the second MP4 video as a fallback
-                currentVideo = 2; // Update the current video tracker
-            } else {
-                webmSource.src = 'center.webm';   // Switch back to the first WebM video
-                mp4Source.src = 'center.mov';     // Switch back to the first MP4 video as a fallback
-                currentVideo = 1; // Update the current video tracker
-            }
-
-            // Load the new video sources
-            videoElement.load();
-
-            // Listen for the video to be ready to play
-            videoElement.onloadeddata = () => {
-                // Start fade-in after the video is loaded
-                videoElement.classList.remove('fade-out');
-                videoElement.classList.add('fade-in');
-
-                videoElement.play();
-
-                // Reset the fade-in effect for the next transition
-                setTimeout(() => {
-                    videoElement.classList.remove('fade-in'); // Remove fade-in after it has played
-                }, 1000); // Match the transition duration
-            };
-        }, 1000); // Match this duration to the fade-out duration
+    if (content) {
+        content.style.filter = `
+            invert(100%)
+            hue-rotate(0deg)
+            brightness(1)
+            contrast(1)
+            saturate(1)
+            sepia(0)
+            grayscale(0)
+        `;
     }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+function applyOriginalColor() {
+    const content = document.querySelector('.content');
+    if (content) {
+        content.style.filter = `
+            invert(0%)
+            hue-rotate(0deg)
+            brightness(1)
+            contrast(1)
+            saturate(1)
+            sepia(0)
+            grayscale(0)
+        `;
+    }
+}
+
+function applyRandomFilter() {
+    const content = document.querySelector('.content');
+    if (content) {
+        const hueRotate = Math.floor(Math.random() * 360);
+        const brightness = (Math.random() * 0.4) + 0.8;
+        const contrast = (Math.random() * 0.4) + 0.8;
+        const saturate = (Math.random() * 0.4) + 0.8;
+        const sepia = (Math.random() * 0.3).toFixed(2);
+        const grayscale = (Math.random() * 0.3).toFixed(2);
+
+        content.style.filter = `
+            invert(0%)
+            hue-rotate(${hueRotate}deg)
+            brightness(${brightness})
+            contrast(${contrast})
+            saturate(${saturate})
+            sepia(${sepia})
+            grayscale(${grayscale})
+        `;
+    }
+}
+
+// UI setup functions
+function setupColorButtons() {
+    const originalButton = document.getElementById('original-color-button');
+    const invertedButton = document.getElementById('inverted-color-button');
+
+    originalButton.addEventListener('click', applyOriginalColor);
+    invertedButton.addEventListener('click', applyInversion);
+}
+
+function setupKeyboardListener() {
+    document.addEventListener('keydown', (event) => {
+        inputSequence += event.key;
+
+        if (inputSequence.endsWith('alex') || 
+            inputSequence.endsWith('couscous') || 
+            inputSequence.endsWith('usquare') || 
+            inputSequence.endsWith('strange')) {
+            switchVideo();
+            inputSequence = '';
+        }
+
+        // Limit the length of the input sequence
+        if (inputSequence.length > 9) {
+            inputSequence = inputSequence.slice(1);
+        }
+    });
+}
+
+function setupInfoAndMissionButtons() {
     const infoButton = document.getElementById('info-button');
     const infoText = document.getElementById('info-text');
     const missionButton = document.getElementById('mission-button');
@@ -310,10 +304,10 @@ document.addEventListener('DOMContentLoaded', () => {
         missionText.classList.remove('visible');
 
         if (infoText.classList.contains('visible')) {
-            // Set a timeout to hide the info-text after 15 seconds (15000 milliseconds)
+            // Auto-hide after 15 seconds
             setTimeout(() => {
                 infoText.classList.remove('visible');
-            }, 15000);  // 15 seconds
+            }, 15000);
         }
     });
     
@@ -331,4 +325,12 @@ document.addEventListener('DOMContentLoaded', () => {
             missionText.classList.remove('visible');
         }
     });
-});
+}
+
+function handleLoadingState() {
+    const loadingOverlay = document.getElementById('loading-overlay');
+    loadingOverlay.classList.add('fade-out');
+    loadingOverlay.addEventListener('transitionend', () => {
+        loadingOverlay.parentNode.removeChild(loadingOverlay);
+    });
+}
