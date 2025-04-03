@@ -36,11 +36,12 @@ html, body {
     width: 100%;
     height: 100%;
     transition: transform 1.2s ease-in-out;
+    transform-origin: center center;
 }
 
-/* When mission is shown, shift only grid container */
+/* When mission is shown, shift and scale grid container */
 .grid-container.shifted {
-    transform: translateX(-200px);
+    transform: translateX(-200px) scale(0.90);
     transition: transform 1.2s ease-in-out;
 }
 
@@ -413,8 +414,8 @@ html, body {
         transform: translate(-50%, -50%);
     }
     
-    /* Don't shift grid for small screens */
+    /* Just scale down grid for small screens, don't shift */
     .grid-container.shifted {
-        transform: translateX(0);
+        transform: translateX(0) scale(0.85);
     }
 }
