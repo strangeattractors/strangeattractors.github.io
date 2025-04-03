@@ -297,11 +297,14 @@ function setupInfoAndMissionButtons() {
     const infoText = document.getElementById('info-text');
     const missionButton = document.getElementById('mission-button');
     const missionText = document.getElementById('mission-text');
+    const content = document.querySelector('.content');
 
     infoButton.addEventListener('click', () => {
         infoText.classList.toggle('visible');
         // Close mission text if open
         missionText.classList.remove('visible');
+        // Reset grid position when closing mission text
+        document.getElementById('grid-container').classList.remove('shifted');
 
         if (infoText.classList.contains('visible')) {
             // Auto-hide after 15 seconds
@@ -312,7 +315,21 @@ function setupInfoAndMissionButtons() {
     });
     
     missionButton.addEventListener('click', () => {
+        const isMissionVisible = missionText.classList.contains('visible');
+        const gridContainer = document.getElementById('grid-container');
+        
+        // Toggle mission text visibility
         missionText.classList.toggle('visible');
+        
+        // Shift grid left when showing mission text, reset when hiding
+        if (!isMissionVisible) {
+            // Shift the grid to the left when showing mission
+            gridContainer.classList.add('shifted');
+        } else {
+            // Reset position when hiding mission text
+            gridContainer.classList.remove('shifted');
+        }
+        
         // Close info text if open
         infoText.classList.remove('visible');
     });
@@ -323,6 +340,8 @@ function setupInfoAndMissionButtons() {
             !missionText.contains(event.target) && 
             event.target !== missionButton) {
             missionText.classList.remove('visible');
+            // Reset grid position
+            document.getElementById('grid-container').classList.remove('shifted');
         }
     });
 }

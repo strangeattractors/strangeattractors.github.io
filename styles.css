@@ -25,6 +25,7 @@ html, body {
 .content {
     width: 100%;
     height: 100%;
+    position: relative;
     transition: filter 1s ease-in-out;
 }
 
@@ -34,6 +35,12 @@ html, body {
     grid-gap: 0;
     width: 100%;
     height: 100%;
+    transition: transform 0.5s ease-in-out;
+}
+
+/* When mission is shown, shift only grid container */
+.grid-container.shifted {
+    transform: translateX(-200px);
 }
 
 .grid-item {
@@ -278,7 +285,7 @@ html, body {
     position: fixed;
     top: 50%;
     left: 50%;
-    transform: translate(-50%, -50%);
+    transform: translateY(-50%);
     background-color: rgba(0, 0, 0, 0.9);
     color: white;
     padding: 20px 25px;
@@ -290,10 +297,11 @@ html, body {
     transition: opacity 0.5s ease, visibility 0.5s ease;
     z-index: 4;
     line-height: 1.5;
-    max-width: 500px;
+    width: 400px;
     word-wrap: break-word;
     max-height: 80vh;
     overflow-y: auto;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
 }
 
 .mission-text h2 {
@@ -380,5 +388,14 @@ html, body {
         right: 20px;
     }
     
-    /* Add more responsive adjustments as needed */
+    .mission-text {
+        width: 90%;
+        max-width: 400px;
+        left: 50%;
+    }
+    
+    /* Adjust the transform for mobile */
+    .grid-container.shifted {
+        transform: translateX(-100px);
+    }
 }
