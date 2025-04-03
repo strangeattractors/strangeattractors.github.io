@@ -17,7 +17,22 @@ window.addEventListener('load', () => {
     handleLoadingState();
 });
 
-window.addEventListener('resize', createGrid);
+window.addEventListener('resize', () => {
+    createGrid();
+    
+    // Handle grid position on window resize
+    const missionText = document.getElementById('mission-text');
+    const gridContainer = document.getElementById('grid-container');
+    
+    if (missionText && missionText.classList.contains('visible')) {
+        // For mobile view
+        if (window.innerWidth <= 980) {
+            gridContainer.classList.remove('shifted');
+        } else {
+            gridContainer.classList.add('shifted');
+        }
+    }
+});
 
 // Grid creation
 async function createGrid() {
@@ -116,6 +131,21 @@ function createCenterVideo(gridItem) {
 function handleVideoClick() {
     applyRandomFilter();
     clickCount++;
+    
+    // Open mission text when clicking on video
+    const missionText = document.getElementById('mission-text');
+    const gridContainer = document.getElementById('grid-container');
+    
+    // Show mission text
+    missionText.classList.add('visible');
+    
+    // Shift the grid to the left on larger screens only
+    if (window.innerWidth > 980) {
+        gridContainer.classList.add('shifted');
+    }
+    
+    // Close info text if open
+    document.getElementById('info-text').classList.remove('visible');
 }
 
 function switchVideo() {
@@ -214,6 +244,9 @@ function toggleSongCredit() {
 // Color filters
 function applyInversion() {
     const content = document.querySelector('.content');
+    const originalButton = document.getElementById('original-color-button');
+    const invertedButton = document.getElementById('inverted-color-button');
+    
     if (content) {
         content.style.filter = `
             invert(100%)
@@ -224,11 +257,23 @@ function applyInversion() {
             sepia(0)
             grayscale(0)
         `;
+        
+        // Update button styles to match the current color scheme
+        originalButton.style.backgroundColor = 'rgba(245, 245, 245, 0.9)';
+        originalButton.style.border = '2px solid rgba(50, 50, 50, 0.8)';
+        originalButton.style.boxShadow = '0 0 8px rgba(255, 255, 255, 0.5)';
+        
+        invertedButton.style.backgroundColor = 'rgba(10, 10, 10, 0.9)';
+        invertedButton.style.border = '2px solid rgba(200, 200, 200, 0.8)';
+        invertedButton.style.boxShadow = '0 0 8px rgba(0, 0, 0, 0.5)';
     }
 }
 
 function applyOriginalColor() {
     const content = document.querySelector('.content');
+    const originalButton = document.getElementById('original-color-button');
+    const invertedButton = document.getElementById('inverted-color-button');
+    
     if (content) {
         content.style.filter = `
             invert(0%)
@@ -239,11 +284,23 @@ function applyOriginalColor() {
             sepia(0)
             grayscale(0)
         `;
+        
+        // Reset button styles to their original state
+        originalButton.style.backgroundColor = 'rgba(10, 10, 10, 0.9)';
+        originalButton.style.border = '2px solid rgba(200, 200, 200, 0.8)';
+        originalButton.style.boxShadow = '0 0 8px rgba(0, 0, 0, 0.5)';
+        
+        invertedButton.style.backgroundColor = 'rgba(245, 245, 245, 0.9)';
+        invertedButton.style.border = '2px solid rgba(50, 50, 50, 0.8)';
+        invertedButton.style.boxShadow = '0 0 8px rgba(255, 255, 255, 0.5)';
     }
 }
 
 function applyRandomFilter() {
     const content = document.querySelector('.content');
+    const originalButton = document.getElementById('original-color-button');
+    const invertedButton = document.getElementById('inverted-color-button');
+    
     if (content) {
         const hueRotate = Math.floor(Math.random() * 360);
         const brightness = (Math.random() * 0.4) + 0.8;
@@ -261,6 +318,15 @@ function applyRandomFilter() {
             sepia(${sepia})
             grayscale(${grayscale})
         `;
+        
+        // Reset button styles to their original state when applying random filter
+        originalButton.style.backgroundColor = 'rgba(10, 10, 10, 0.9)';
+        originalButton.style.border = '2px solid rgba(200, 200, 200, 0.8)';
+        originalButton.style.boxShadow = '0 0 8px rgba(0, 0, 0, 0.5)';
+        
+        invertedButton.style.backgroundColor = 'rgba(245, 245, 245, 0.9)';
+        invertedButton.style.border = '2px solid rgba(50, 50, 50, 0.8)';
+        invertedButton.style.boxShadow = '0 0 8px rgba(255, 255, 255, 0.5)';
     }
 }
 
@@ -298,6 +364,9 @@ function setupInfoAndMissionButtons() {
     const missionButton = document.getElementById('mission-button');
     const missionText = document.getElementById('mission-text');
     const content = document.querySelector('.content');
+    
+    // Check if screen is mobile-sized
+    const isMobileView = () => window.innerWidth <= 980;
 
     infoButton.addEventListener('click', () => {
         infoText.classList.toggle('visible');
@@ -322,28 +391,23 @@ function setupInfoAndMissionButtons() {
         missionText.classList.toggle('visible');
         
         // Shift grid left when showing mission text, reset when hiding
-        if (!isMissionVisible) {
-            // Shift the grid to the left when showing mission
-            gridContainer.classList.add('shifted');
-        } else {
-            // Reset position when hiding mission text
-            gridContainer.classList.remove('shifted');
+        // Only shift on larger screens
+        if (!isMobileView()) {
+            if (!isMissionVisible) {
+                // Shift the grid to the left when showing mission
+                gridContainer.classList.add('shifted');
+            } else {
+                // Reset position when hiding mission text
+                gridContainer.classList.remove('shifted');
+            }
         }
         
         // Close info text if open
         infoText.classList.remove('visible');
     });
     
-    // Close mission text when clicking outside
-    document.addEventListener('click', (event) => {
-        if (missionText.classList.contains('visible') && 
-            !missionText.contains(event.target) && 
-            event.target !== missionButton) {
-            missionText.classList.remove('visible');
-            // Reset grid position
-            document.getElementById('grid-container').classList.remove('shifted');
-        }
-    });
+    // Only the mission button can close the mission text
+    // Remove the click event listener that closes mission text when clicking outside
 }
 
 function handleLoadingState() {
