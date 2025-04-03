@@ -52,19 +52,29 @@ async function createGrid() {
 
         let cellSize = Math.min(maxCellSize, Math.max(minCellSize, Math.min(viewportWidth, viewportHeight)));
 
-        let cols = Math.ceil(viewportWidth / cellSize);
-        let rows = Math.ceil(viewportHeight / cellSize);
+        // Calculate base grid dimensions to cover viewport
+        let baseCols = Math.ceil(viewportWidth / cellSize);
+        let baseRows = Math.ceil(viewportHeight / cellSize);
 
         // Ensure odd number of rows and columns for perfect centering
-        if (cols % 2 === 0) cols += 1;
-        if (rows % 2 === 0) rows += 1;
+        if (baseCols % 2 === 0) baseCols += 1;
+        if (baseRows % 2 === 0) baseRows += 1;
+        
+        // Add extra rows and columns for overflow (one on each side)
+        const extraCells = 2; // One extra on each side
+        const cols = baseCols + extraCells;
+        const rows = baseRows + extraCells;
 
+        // Calculate total grid dimensions
         const gridWidth = cols * cellSize;
         const gridHeight = rows * cellSize;
+        
+        // Find center of the expanded grid
         const centerCol = Math.floor(cols / 2);
         const centerRow = Math.floor(rows / 2);
 
-        // Calculate grid position to center it
+        // Calculate grid position to center visible portion in viewport
+        // We need to position it so one row/column is hidden on each side
         const gridLeft = (viewportWidth / 2) - (cellSize / 2) - (centerCol * cellSize);
         const gridTop = (viewportHeight / 2) - (cellSize / 2) - (centerRow * cellSize);
 
