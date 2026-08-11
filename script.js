@@ -263,11 +263,11 @@ function setupLoadingOverlay() {
         if (overlay.classList.contains('fade-out')) return;
         overlay.classList.add('fade-out');
         overlay.addEventListener('transitionend', () => overlay.remove());
-        // Let the attractor start materializing halfway through the field's
+        // Let the attractor start materializing shortly into the field's
         // fade-in (poster first if the video is still loading): the entrance
-        // reads as one continuous bloom, with the field leading slightly so
-        // the center square never sits alone on black
-        setTimeout(() => centerVideo.classList.remove('fade-out'), 500);
+        // reads as one continuous bloom, with the field leading just enough
+        // that the center square never sits alone on black
+        setTimeout(() => centerVideo.classList.remove('fade-out'), 200);
     };
 
     const pageLoaded = new Promise(resolve => {
