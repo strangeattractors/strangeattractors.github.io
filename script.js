@@ -101,6 +101,10 @@ function getCenterVideo() {
     centerVideo.autoplay = true;
     centerVideo.loop = true;
     centerVideo.preload = 'auto';
+    // First frame of the video: lets the attractor appear during the page
+    // entrance even if the video itself is still downloading, and the video
+    // takes over seamlessly from the identical still
+    centerVideo.poster = 'center-poster.webp';
 
     for (const [type, src] of Object.entries(VIDEO_SOURCES[videoIndex])) {
         const source = document.createElement('source');
@@ -110,10 +114,10 @@ function getCenterVideo() {
     }
     centerVideo.appendChild(document.createTextNode('Your browser does not support the video tag or the provided formats.'));
 
-    // Start invisible over the background tile and fade in with the first
-    // frame, so a slow video never pops in abruptly
+    // Hidden during the page reveal: the digit field fades in first as a
+    // seamless whole (the center cell is just another tile), then the
+    // attractor materializes over it (see setupLoadingOverlay)
     centerVideo.classList.add('fade-out');
-    centerVideo.addEventListener('loadeddata', () => centerVideo.classList.remove('fade-out'), { once: true });
 
     centerVideo.addEventListener('click', handleVideoClick);
     gridContainer.appendChild(centerVideo);
@@ -259,6 +263,11 @@ function setupLoadingOverlay() {
         if (overlay.classList.contains('fade-out')) return;
         overlay.classList.add('fade-out');
         overlay.addEventListener('transitionend', () => overlay.remove());
+        // Let the attractor start materializing halfway through the field's
+        // fade-in (poster first if the video is still loading): the entrance
+        // reads as one continuous bloom, with the field leading slightly so
+        // the center square never sits alone on black
+        setTimeout(() => centerVideo.classList.remove('fade-out'), 500);
     };
 
     const pageLoaded = new Promise(resolve => {
@@ -273,14 +282,14 @@ function setupLoadingOverlay() {
     tileArt.src = 'other.webp';
     const tileArtReady = tileArt.decode().catch(() => {});
 
-    // Wait for the video's first frame too, so the whole composition
-    // (tiles + attractor) appears at once when the black lifts
-    const videoReady = new Promise(resolve => {
-        if (centerVideo.readyState >= 2) resolve();
-        else centerVideo.addEventListener('loadeddata', resolve, { once: true });
-    });
+    // The poster (the video's first frame, ~100KB) stands in for the
+    // multi-MB video during the entrance, so the attractor can appear
+    // without waiting for the video download
+    const poster = new Image();
+    poster.src = 'center-poster.webp';
+    const posterReady = poster.decode().catch(() => {});
 
-    Promise.all([pageLoaded, tileArtReady, videoReady]).then(reveal);
+    Promise.all([pageLoaded, tileArtReady, posterReady]).then(reveal);
     // Safety net in case loading stalls on a slow connection
     setTimeout(reveal, 6000);
 }
