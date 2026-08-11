@@ -17,6 +17,9 @@ const MIME = {
   '.mp4': 'video/mp4',
   '.mp3': 'audio/mpeg',
   '.ico': 'image/x-icon',
+  '.jpg': 'image/jpeg',
+  '.txt': 'text/plain; charset=utf-8',
+  '.xml': 'application/xml',
 };
 
 http.createServer((req, res) => {

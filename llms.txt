@@ -1,0 +1,22 @@
+# Strange Attractor
+
+> Strange Attractor creates an economy where professionals don't just use AI, they own AI — turning their expertise into income-generating AI agents.
+
+Strange Attractor (strange-attractor.com) is an AI company. Its website is an
+interactive art piece: a field of handwritten digits surrounding an animated
+strange attractor — a nod to chaotic systems, where rare initial conditions
+give rise to intricate, never-repeating patterns.
+
+## Mission
+
+At Strange Attractor, we want to create an economy where professionals don't
+just use AI, they own AI; turning their expertise into income-generating AI
+agents.
+
+## Projects
+
+- [YouSquared](https://yousquared.ai): the first project built at Strange Attractor.
+
+## People
+
+- Alexandre de Brébisson
