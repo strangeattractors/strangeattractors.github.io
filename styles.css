@@ -1,9 +1,15 @@
-/* 
- * Strange Attractor Website Styles
- * Organized by component type
- */
+/* Strange Attractor Website Styles */
 
-/* === Base Styles === */
+:root {
+    --accent: #ffcc00;
+    --terminal-green: rgb(0, 255, 0);
+    --panel-bg: rgba(0, 0, 0, 0.8);
+    --button-bg: rgba(255, 255, 255, 0.2);
+    --button-bg-hover: rgba(255, 255, 255, 0.5);
+    --mono: "Courier New", monospace;
+}
+
+/* === Base === */
 * {
     margin: 0;
     padding: 0;
@@ -21,7 +27,7 @@ html, body {
     font-family: Arial, sans-serif;
 }
 
-/* === Layout Components === */
+/* === Layout === */
 .content {
     width: 100%;
     height: 100%;
@@ -32,17 +38,15 @@ html, body {
 .grid-container {
     position: absolute;
     display: grid;
-    grid-gap: 0;
     width: 100%;
     height: 100%;
     transition: transform 1.2s ease-in-out;
     transform-origin: center center;
 }
 
-/* When mission is shown, shift and scale grid container */
+/* When the mission panel is shown, shift and scale the grid */
 .grid-container.shifted {
     transform: translateX(-200px) scale(0.90);
-    transition: transform 1.2s ease-in-out;
 }
 
 .grid-item {
@@ -55,249 +59,129 @@ html, body {
     background-image: url('other.webp');
 }
 
-.grid-item.center {
-    position: relative;
-    cursor: pointer;
-}
-
-/* === Video Elements === */
+/* Overlaid on the center grid cell; geometry set inline by script.js */
 .center-video {
     position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
     object-fit: cover;
     display: block;
-    background-color: transparent;
-    pointer-events: auto;
+    cursor: pointer;
     transition: opacity 1s ease-in-out;
     z-index: 2;
 }
 
-/* === Button Styles === */
-/* Common button styles */
-.button-base {
+/* === Buttons === */
+button {
     border: none;
     cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background-color 0.3s ease;
-}
-
-.button-base:focus {
-    outline: none;
-}
-
-/* Mute button */
-.mute-button {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    width: 40px;
-    height: 40px;
-    background-color: rgba(255, 255, 255, 0.2);
-    border: none;
-    border-radius: 50%;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
     z-index: 3;
-    transition: background-color 0.3s ease;
 }
 
-.mute-button:hover {
-    background-color: rgba(255, 255, 255, 0.5);
-}
-
-.mute-button:focus {
+button:focus {
     outline: none;
 }
 
-.mute-button::before {
-    content: '🔇';
-    font-size: 20px;
-}
-
-.mute-button.unmuted::before {
-    content: '🔊';
-}
-
-/* Info button */
-.info-button {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    width: 40px;
-    height: 40px;
-    background-color: rgba(255, 255, 255, 0.2);
-    border: none;
-    border-radius: 50%;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 3;
-    transition: background-color 0.3s ease;
-    font-size: 20px;
-    font-family: "Courier New", monospace;
-    color: rgba(0, 255, 0, 1);
-}
-
-.info-button:hover {
-    background-color: rgba(255, 255, 255, 0.5);
-}
-
-.info-button:focus {
-    outline: none;
-}
-
-/* Mission button */
+.round-button,
 .mission-button {
     position: fixed;
-    bottom: 20px;
-    left: 20px;
-    background-color: rgba(255, 255, 255, 0.2);
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 3;
+    background-color: var(--button-bg);
     transition: background-color 0.3s ease;
+}
+
+.round-button:hover,
+.mission-button:hover {
+    background-color: var(--button-bg-hover);
+}
+
+.round-button {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+}
+
+.mute-button {
+    top: 20px;
+    right: 20px;
+    color: var(--terminal-green);
+}
+
+/* Speaker icon: × while muted, sound waves while playing */
+.mute-button .icon-waves {
+    display: none;
+}
+
+.mute-button.unmuted .icon-waves {
+    display: block;
+}
+
+.mute-button.unmuted .icon-muted {
+    display: none;
+}
+
+.info-button {
+    bottom: 20px;
+    right: 20px;
+    font-size: 20px;
+    font-family: var(--mono);
+    color: var(--terminal-green);
+}
+
+.mission-button {
+    bottom: 20px;
+    left: 20px;
+    border-radius: 5px;
     font-size: 14px;
-    font-family: "Courier New", monospace;
-    color: rgba(0, 255, 0, 1);
+    font-family: var(--mono);
+    color: var(--terminal-green);
     padding: 8px 12px;
 }
 
-.mission-button:hover {
-    background-color: rgba(255, 255, 255, 0.5);
-}
-
-.mission-button:focus {
-    outline: none;
-}
-
-/* Color control buttons */
-.color-control-button {
+/* === Text overlays === */
+.overlay-text {
     position: fixed;
-    right: 20px;
-    width: 40px;
-    height: 40px;
-    border: none;
-    border-radius: 50%;
-    cursor: pointer;
-    display: block;
-    z-index: 3;
-    transition: background-color 0.3s ease, transform 0.3s ease;
-    margin-top: 10px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-}
-
-#original-color-button {
-    top: 70px;
-    background-color: rgba(10, 10, 10, 0.9);
-    border: 2px solid rgba(200, 200, 200, 0.8);
-    box-shadow: 0 0 8px rgba(0, 0, 0, 0.5);
-}
-
-#inverted-color-button {
-    top: 130px;
-    background-color: rgba(245, 245, 245, 0.9);
-    border: 2px solid rgba(50, 50, 50, 0.8);
-    box-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
-}
-
-.color-control-button:hover {
-    transform: scale(1.1);
-}
-
-.color-control-button:focus {
-    outline: none;
-}
-
-/* === Text Display Components === */
-/* Common text display styles */
-.text-overlay-base {
-    background-color: rgba(0, 0, 0, 0.8);
+    background-color: var(--panel-bg);
     color: white;
     padding: 10px 15px;
     border-radius: 5px;
-    font-family: "Courier New", monospace;
+    font-size: 14px;
+    font-family: var(--mono);
     opacity: 0;
     visibility: hidden;
     transition: opacity 0.5s ease, visibility 0.5s ease;
     z-index: 3;
 }
 
-.text-overlay-base.visible {
+.overlay-text.visible {
     opacity: 1;
     visibility: visible;
 }
 
-/* Song credit */
 .song-credit {
-    position: fixed;
     top: 20px;
     right: 70px;
-    background-color: rgba(0, 0, 0, 0.8);
-    color: #fff;
-    padding: 10px 15px;
-    border-radius: 5px;
-    font-size: 14px;
-    font-family: "Courier New", monospace;
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.5s ease, visibility 0.5s ease;
-    z-index: 3;
 }
 
-.song-credit.visible {
-    opacity: 1;
-    visibility: visible;
-}
-
-/* Info text */
 .info-text {
-    position: fixed;
     bottom: 70px;
     right: 20px;
-    background-color: rgba(0, 0, 0, 0.8);
-    color: white;
-    padding: 10px 15px;
-    border-radius: 5px;
-    font-size: 14px;
-    font-family: "Courier New", monospace;
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.5s ease, visibility 0.5s ease;
-    z-index: 3;
     line-height: 1.3;
     max-width: 400px;
     word-wrap: break-word;
 }
 
-.info-text.visible {
-    opacity: 1;
-    visibility: visible;
-}
-
-/* Mission text */
+/* Mission panel (slides in from the right) */
 .mission-text {
     position: fixed;
     top: 50%;
     left: 50%;
-    transform: translateY(-50%);
     background-color: rgba(0, 0, 0, 0.9);
     color: white;
     padding: 20px 25px;
     border-radius: 5px;
     font-size: 14px;
-    font-family: "Courier New", monospace;
+    font-family: var(--mono);
     opacity: 0;
     visibility: hidden;
     z-index: 4;
@@ -307,17 +191,21 @@ html, body {
     max-height: 80vh;
     overflow-y: auto;
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
-    
-    /* Animation for sliding in/out */
     transform: translate(300px, -50%);
-    transition: 
+    transition:
         opacity 1.2s ease-in-out,
         visibility 1.2s ease-in-out,
         transform 1.2s ease-in-out;
 }
 
+.mission-text.visible {
+    opacity: 1;
+    visibility: visible;
+    transform: translate(0, -50%);
+}
+
 .mission-text h2 {
-    color: #ffcc00;
+    color: var(--accent);
     margin-bottom: 10px;
     margin-top: 15px;
 }
@@ -330,28 +218,11 @@ html, body {
     margin-bottom: 15px;
 }
 
-.team-list {
-    list-style-type: none;
-    padding: 0;
-}
-
-.team-list li {
-    margin-bottom: 8px;
-}
-
-.mission-text.visible {
-    opacity: 1;
-    visibility: visible;
-    transform: translate(0, -50%);
-}
-
-/* Highlight color for important text */
 .highlight {
-    color: #ffcc00;
+    color: var(--accent);
 }
 
-/* === Utility Classes === */
-/* Loading overlay */
+/* === Overlays === */
 #loading-overlay {
     position: fixed;
     top: 0;
@@ -361,7 +232,7 @@ html, body {
     background-color: black;
     z-index: 4;
     opacity: 1;
-    transition: opacity 3s ease;
+    transition: opacity 1s ease;
     pointer-events: none;
 }
 
@@ -369,7 +240,6 @@ html, body {
     opacity: 0;
 }
 
-/* Gradient overlay */
 .gradient-overlay {
     position: fixed;
     z-index: 1;
@@ -382,7 +252,7 @@ html, body {
     transition: background 1s ease-in-out;
 }
 
-/* Fade animations */
+/* Fade animations (used by the video switch easter egg) */
 .fade-out {
     opacity: 0;
     transition: opacity 1s ease-in-out;
@@ -393,27 +263,24 @@ html, body {
     transition: opacity 1s ease-in-out;
 }
 
-/* === Media Queries === */
+/* === Small screens === */
 @media only screen and (max-width: 980px) {
     .info-text {
         font-size: 16px;
         max-width: none;
     }
-    
+
     .mission-text {
         width: 90%;
         max-width: 350px;
-        right: auto;
-        top: 50%;
-        left: 50%;
         transform: translate(200%, -50%);
     }
-    
+
     .mission-text.visible {
         transform: translate(-50%, -50%);
     }
-    
-    /* Just scale down grid for small screens, don't shift */
+
+    /* Just scale down the grid on small screens, don't shift */
     .grid-container.shifted {
         transform: translateX(0) scale(0.85);
     }

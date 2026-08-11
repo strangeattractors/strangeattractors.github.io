@@ -1,1 +1,3 @@
 include: [".well-known"]
+# Dev assets — keep them out of the deployed site
+exclude: ["sandbox", "dev"]

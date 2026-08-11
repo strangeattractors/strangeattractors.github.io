@@ -1,435 +1,295 @@
-// Global variables
+// === Constants ===
+const MOBILE_BREAKPOINT = 980;
+const IMG_ORIGINAL_SIZE = 504;
+const MIN_CELL_SIZE = 100;
+const RESIZE_DEBOUNCE_MS = 150;
+
+// Typing any of these switches the center video (easter egg)
+const VIDEO_SWITCH_SEQUENCES = ['alex', 'couscous', 'usquare', 'strange'];
+const VIDEO_SOURCES = [
+    { webm: 'center.webm', mp4: 'center.mp4' },
+    { webm: 'center2.webm', mp4: 'center2.mp4' },
+];
+
+// === DOM references ===
+const content = document.getElementById('content');
+const gridContainer = document.getElementById('grid-container');
+const missionText = document.getElementById('mission-text');
+const infoText = document.getElementById('info-text');
+const songCredit = document.getElementById('song-credit');
+const audio = document.getElementById('background-audio');
+const muteButton = document.getElementById('mute-button');
+
+// === State ===
+let videoIndex = 0;
 let inputSequence = '';
-let clickCount = 0;
-let currentVideo = 1;
-let audioInitialized = false;
+let infoHideTimer = null;
+let songCreditHideTimer = null;
+let lastGridSize = { width: 0, height: 0 };
 
-// Initialize the application
-document.addEventListener('DOMContentLoaded', () => {
-    setupColorButtons();
-    setupKeyboardListener();
-    setupInfoAndMissionButtons();
-});
+// The center video is created once and overlaid on the center cell; grid
+// rebuilds never touch it, so resizes never re-download or restart it.
+let centerVideo = null;
 
-window.addEventListener('load', () => {
-    createGrid();
-    initializeAudio();
-    handleLoadingState();
-});
+const isMobileView = () => window.innerWidth <= MOBILE_BREAKPOINT;
 
-window.addEventListener('resize', () => {
-    createGrid();
-    
-    // Handle grid position on window resize
-    const missionText = document.getElementById('mission-text');
-    const gridContainer = document.getElementById('grid-container');
-    
-    if (missionText && missionText.classList.contains('visible')) {
-        // For mobile view
-        if (window.innerWidth <= 980) {
-            gridContainer.classList.remove('shifted');
-        } else {
-            gridContainer.classList.add('shifted');
-        }
+// === Init (script is loaded at the end of <body>, DOM is ready) ===
+createGrid();
+setupControls();
+setupKeyboardListener();
+setupLoadingOverlay();
+
+window.addEventListener('resize', debounce(handleResize, RESIZE_DEBOUNCE_MS));
+
+// === Grid ===
+function createGrid() {
+    const viewportWidth = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
+    const viewportHeight = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0);
+    lastGridSize = { width: viewportWidth, height: viewportHeight };
+
+    const displayScale = isMobileView() ? 1 : 0.75;
+    const maxCellSize = IMG_ORIGINAL_SIZE * displayScale;
+    const cellSize = Math.min(maxCellSize, Math.max(MIN_CELL_SIZE, Math.min(viewportWidth, viewportHeight)));
+
+    // Grid dimensions that cover the viewport, odd counts so a cell sits
+    // exactly in the middle, plus one extra row/column on each side.
+    let cols = Math.ceil(viewportWidth / cellSize);
+    let rows = Math.ceil(viewportHeight / cellSize);
+    if (cols % 2 === 0) cols += 1;
+    if (rows % 2 === 0) rows += 1;
+    cols += 2;
+    rows += 2;
+
+    const centerCol = Math.floor(cols / 2);
+    const centerRow = Math.floor(rows / 2);
+
+    // Position the grid so the center cell is centered in the viewport
+    const gridLeft = viewportWidth / 2 - cellSize / 2 - centerCol * cellSize;
+    const gridTop = viewportHeight / 2 - cellSize / 2 - centerRow * cellSize;
+
+    gridContainer.style.width = `${cols * cellSize}px`;
+    gridContainer.style.height = `${rows * cellSize}px`;
+    gridContainer.style.left = `${gridLeft}px`;
+    gridContainer.style.top = `${gridTop}px`;
+    gridContainer.style.gridTemplateColumns = `repeat(${cols}, ${cellSize}px)`;
+    gridContainer.style.gridTemplateRows = `repeat(${rows}, ${cellSize}px)`;
+
+    // Rebuild only the background tiles; the video element stays attached so
+    // playback is never interrupted
+    gridContainer.querySelectorAll('.grid-item').forEach(el => el.remove());
+    for (let i = 0; i < rows * cols; i++) {
+        const gridItem = document.createElement('div');
+        gridItem.className = 'grid-item';
+        gridContainer.appendChild(gridItem);
     }
-});
 
-// Grid creation
-async function createGrid() {
-    const container = document.getElementById('grid-container');
-    try {
-        container.innerHTML = '';
-
-        const viewportWidth = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
-        const viewportHeight = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0);
-        const imgOriginalSize = 504;
-        
-        // Determine displayScale based on screen width
-        const screenWidth = window.innerWidth;
-        const displayScale = screenWidth <= 980 ? 1 : 0.75;
-        const minCellSize = 100;
-        const maxCellSize = imgOriginalSize * displayScale;
-
-        let cellSize = Math.min(maxCellSize, Math.max(minCellSize, Math.min(viewportWidth, viewportHeight)));
-
-        // Calculate base grid dimensions to cover viewport
-        let baseCols = Math.ceil(viewportWidth / cellSize);
-        let baseRows = Math.ceil(viewportHeight / cellSize);
-
-        // Ensure odd number of rows and columns for perfect centering
-        if (baseCols % 2 === 0) baseCols += 1;
-        if (baseRows % 2 === 0) baseRows += 1;
-        
-        // Add extra rows and columns for overflow (one on each side)
-        const extraCells = 2; // One extra on each side
-        const cols = baseCols + extraCells;
-        const rows = baseRows + extraCells;
-
-        // Calculate total grid dimensions
-        const gridWidth = cols * cellSize;
-        const gridHeight = rows * cellSize;
-        
-        // Find center of the expanded grid
-        const centerCol = Math.floor(cols / 2);
-        const centerRow = Math.floor(rows / 2);
-
-        // Calculate grid position to center visible portion in viewport
-        // We need to position it so one row/column is hidden on each side
-        const gridLeft = (viewportWidth / 2) - (cellSize / 2) - (centerCol * cellSize);
-        const gridTop = (viewportHeight / 2) - (cellSize / 2) - (centerRow * cellSize);
-
-        // Set grid container styles
-        container.style.width = `${gridWidth}px`;
-        container.style.height = `${gridHeight}px`;
-        container.style.left = `${gridLeft}px`;
-        container.style.top = `${gridTop}px`;
-        container.style.gridTemplateColumns = `repeat(${cols}, ${cellSize}px)`;
-        container.style.gridTemplateRows = `repeat(${rows}, ${cellSize}px)`;
-
-        // Create grid items
-        for (let row = 0; row < rows; row++) {
-            for (let col = 0; col < cols; col++) {
-                const gridItem = document.createElement('div');
-                gridItem.className = 'grid-item';
-                gridItem.style.backgroundImage = `url('other.webp')`;
-
-                // Add center video if this is the center cell
-                if (row === centerRow && col === centerCol) {
-                    createCenterVideo(gridItem);
-                }
-
-                container.appendChild(gridItem);
-            }
-        }
-    } catch (error) {
-        console.error('Error creating grid:', error);
-    }
+    // Overlay the video on the center cell
+    const video = getCenterVideo();
+    video.style.left = `${centerCol * cellSize}px`;
+    video.style.top = `${centerRow * cellSize}px`;
+    video.style.width = `${cellSize}px`;
+    video.style.height = `${cellSize}px`;
 }
 
-function createCenterVideo(gridItem) {
-    gridItem.classList.add('center');
-    gridItem.style.position = 'relative';
+function getCenterVideo() {
+    if (centerVideo) return centerVideo;
 
-    const video = document.createElement('video');
-    video.className = 'center-video';
-    video.muted = true;
-    video.playsInline = true;
-    video.autoplay = true;
-    video.setAttribute('preload', 'auto');
-    video.setAttribute('loop', 'true');
+    centerVideo = document.createElement('video');
+    centerVideo.className = 'center-video';
+    centerVideo.muted = true;
+    centerVideo.playsInline = true;
+    centerVideo.autoplay = true;
+    centerVideo.loop = true;
+    centerVideo.preload = 'auto';
 
-    // Add sources for different formats
-    const sourceWebM = document.createElement('source');
-    sourceWebM.src = 'center.webm';
-    sourceWebM.type = 'video/webm';
-    video.appendChild(sourceWebM);
+    for (const [type, src] of Object.entries(VIDEO_SOURCES[videoIndex])) {
+        const source = document.createElement('source');
+        source.src = src;
+        source.type = `video/${type}`;
+        centerVideo.appendChild(source);
+    }
+    centerVideo.appendChild(document.createTextNode('Your browser does not support the video tag or the provided formats.'));
 
-    const sourceMP4 = document.createElement('source');
-    sourceMP4.src = 'center.mp4';
-    sourceMP4.type = 'video/mp4';
-    video.appendChild(sourceMP4);
+    // Start invisible over the background tile and fade in with the first
+    // frame, so a slow video never pops in abruptly
+    centerVideo.classList.add('fade-out');
+    centerVideo.addEventListener('loadeddata', () => centerVideo.classList.remove('fade-out'), { once: true });
 
-    // Fallback message
-    const fallbackText = document.createTextNode('Your browser does not support the video tag or the provided formats.');
-    video.appendChild(fallbackText);
-
-    gridItem.appendChild(video);
-    video.addEventListener('click', handleVideoClick);
+    centerVideo.addEventListener('click', handleVideoClick);
+    gridContainer.appendChild(centerVideo);
+    return centerVideo;
 }
 
-// Video interaction
+function handleResize() {
+    const width = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
+    const height = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0);
+
+    // Ignore spurious resize events (e.g. mobile address bar) that don't
+    // change the viewport size
+    if (width !== lastGridSize.width || height !== lastGridSize.height) {
+        createGrid();
+    }
+
+    // Keep the grid shift consistent with the mission panel and screen size
+    const missionVisible = missionText.classList.contains('visible');
+    gridContainer.classList.toggle('shifted', missionVisible && !isMobileView());
+}
+
+// === Mission / info panels ===
+function showMission() {
+    if (!isMobileView()) gridContainer.classList.add('shifted');
+    missionText.classList.add('visible');
+    infoText.classList.remove('visible');
+}
+
+function hideMission() {
+    missionText.classList.remove('visible');
+    gridContainer.classList.remove('shifted');
+}
+
 function handleVideoClick() {
     applyRandomFilter();
-    clickCount++;
-    
-    // Open mission text when clicking on video
-    const missionText = document.getElementById('mission-text');
-    const gridContainer = document.getElementById('grid-container');
-    
-    // First shift the grid (on larger screens only)
-    if (window.innerWidth > 980) {
-        gridContainer.classList.add('shifted');
-    }
-    
-    // Then show mission text (will animate in from right)
-    missionText.classList.add('visible');
-    
-    // Close info text if open
-    document.getElementById('info-text').classList.remove('visible');
+    showMission();
 }
 
+// === Color filters ===
+// All filter strings keep the same 7 functions in the same order so CSS can
+// smoothly interpolate between any two color states.
+function setContentFilter({ invert = 0, hueRotate = 0, brightness = 1, contrast = 1, saturate = 1, sepia = 0, grayscale = 0 } = {}) {
+    content.style.filter =
+        `invert(${invert}) hue-rotate(${hueRotate}deg) brightness(${brightness}) ` +
+        `contrast(${contrast}) saturate(${saturate}) sepia(${sepia}) grayscale(${grayscale})`;
+}
+
+function applyRandomFilter() {
+    setContentFilter({
+        hueRotate: Math.floor(Math.random() * 360),
+        brightness: Math.random() * 0.4 + 0.8,
+        contrast: Math.random() * 0.4 + 0.8,
+        saturate: Math.random() * 0.4 + 0.8,
+        sepia: (Math.random() * 0.3).toFixed(2),
+        grayscale: (Math.random() * 0.3).toFixed(2),
+    });
+}
+
+// === Video switch easter egg ===
 function switchVideo() {
-    const videoElement = document.querySelector('.center-video');
-    const webmSource = document.querySelector('.center-video source[type="video/webm"]');
-    const mp4Source = document.querySelector('.center-video source[type="video/mp4"]');
+    if (!centerVideo) return;
 
-    if (videoElement && webmSource && mp4Source) {
-        // Start fade-out
-        videoElement.classList.add('fade-out');
+    videoIndex = (videoIndex + 1) % VIDEO_SOURCES.length;
+    centerVideo.classList.add('fade-out');
 
-        // Wait for the fade-out to complete
-        setTimeout(() => {
-            // Switch video sources
-            if (currentVideo === 1) {
-                webmSource.src = 'center2.webm';
-                mp4Source.src = 'center2.mp4';
-                currentVideo = 2;
-            } else {
-                webmSource.src = 'center.webm';
-                mp4Source.src = 'center.mp4';
-                currentVideo = 1;
-            }
+    // Wait for the fade-out before swapping sources
+    setTimeout(() => {
+        const { webm, mp4 } = VIDEO_SOURCES[videoIndex];
+        centerVideo.querySelector('source[type="video/webm"]').src = webm;
+        centerVideo.querySelector('source[type="video/mp4"]').src = mp4;
+        centerVideo.load();
 
-            // Load the new video sources
-            videoElement.load();
-
-            // Listen for the video to be ready to play
-            videoElement.onloadeddata = () => {
-                // Start fade-in after the video is loaded
-                videoElement.classList.remove('fade-out');
-                videoElement.classList.add('fade-in');
-                videoElement.play();
-
-                // Reset the fade-in effect for the next transition
-                setTimeout(() => {
-                    videoElement.classList.remove('fade-in');
-                }, 1000);
-            };
-        }, 1000);
-    }
+        centerVideo.addEventListener('loadeddata', () => {
+            centerVideo.classList.remove('fade-out');
+            centerVideo.classList.add('fade-in');
+            centerVideo.play();
+            setTimeout(() => centerVideo.classList.remove('fade-in'), 1000);
+        }, { once: true });
+    }, 1000);
 }
 
-// Audio functionality
-function initializeAudio() {
-    const audio = document.getElementById('background-audio');
-    const muteButton = document.getElementById('mute-button');
+function setupKeyboardListener() {
+    const maxLength = Math.max(...VIDEO_SWITCH_SEQUENCES.map(s => s.length));
 
-    updateMuteButton();
+    document.addEventListener('keydown', (event) => {
+        inputSequence = (inputSequence + event.key).slice(-maxLength);
+
+        if (VIDEO_SWITCH_SEQUENCES.some(s => inputSequence.endsWith(s))) {
+            switchVideo();
+            inputSequence = '';
+        }
+    });
+}
+
+// === Controls ===
+function setupControls() {
+    document.getElementById('info-button').addEventListener('click', () => {
+        infoText.classList.toggle('visible');
+        hideMission();
+
+        clearTimeout(infoHideTimer);
+        if (infoText.classList.contains('visible')) {
+            infoHideTimer = setTimeout(() => infoText.classList.remove('visible'), 15000);
+        }
+    });
+
+    document.getElementById('mission-button').addEventListener('click', () => {
+        if (missionText.classList.contains('visible')) {
+            hideMission();
+        } else {
+            showMission();
+        }
+    });
 
     muteButton.addEventListener('click', () => {
-        if (!audioInitialized) {
-            audio.src = 'aquarius_siteperso.mp3';
-            audioInitialized = true;
-        }
+        // The audio file is only fetched on first unmute
+        if (!audio.src) audio.src = 'aquarius_siteperso.mp3';
 
-        if (audio.muted) {
-            audio.muted = false;
-            audio.play().catch(err => {
-                console.error('Audio play failed:', err);
-            });
-        } else {
-            audio.muted = true;
+        audio.muted = !audio.muted;
+        if (!audio.muted) {
+            audio.play().catch(err => console.error('Audio play failed:', err));
+            showSongCredit();
         }
-
         updateMuteButton();
-        toggleSongCredit();
     });
 }
 
 function updateMuteButton() {
-    const audio = document.getElementById('background-audio');
-    const muteButton = document.getElementById('mute-button');
-
-    if (audio.muted) {
-        muteButton.classList.remove('unmuted');
-        muteButton.setAttribute('aria-label', 'Unmute audio');
-    } else {
-        muteButton.classList.add('unmuted');
-        muteButton.setAttribute('aria-label', 'Mute audio');
-    }
+    muteButton.classList.toggle('unmuted', !audio.muted);
+    muteButton.setAttribute('aria-label', audio.muted ? 'Unmute audio' : 'Mute audio');
 }
 
-function toggleSongCredit() {
-    const audio = document.getElementById('background-audio');
-    const songCredit = document.getElementById('song-credit');
-
-    if (!audio.muted) {
-        songCredit.classList.add('visible');
-        setTimeout(() => {
-            songCredit.classList.remove('visible');
-        }, 5000);
-    }
+function showSongCredit() {
+    songCredit.classList.add('visible');
+    clearTimeout(songCreditHideTimer);
+    songCreditHideTimer = setTimeout(() => songCredit.classList.remove('visible'), 5000);
 }
 
-// Color filters
-function applyInversion() {
-    const content = document.querySelector('.content');
-    const originalButton = document.getElementById('original-color-button');
-    const invertedButton = document.getElementById('inverted-color-button');
-    
-    if (content) {
-        content.style.filter = `
-            invert(100%)
-            hue-rotate(0deg)
-            brightness(1)
-            contrast(1)
-            saturate(1)
-            sepia(0)
-            grayscale(0)
-        `;
-        
-        // Update button styles to match the current color scheme
-        originalButton.style.backgroundColor = 'rgba(245, 245, 245, 0.9)';
-        originalButton.style.border = '2px solid rgba(50, 50, 50, 0.8)';
-        originalButton.style.boxShadow = '0 0 8px rgba(255, 255, 255, 0.5)';
-        
-        invertedButton.style.backgroundColor = 'rgba(10, 10, 10, 0.9)';
-        invertedButton.style.border = '2px solid rgba(200, 200, 200, 0.8)';
-        invertedButton.style.boxShadow = '0 0 8px rgba(0, 0, 0, 0.5)';
-    }
-}
+// === Loading overlay ===
+function setupLoadingOverlay() {
+    const overlay = document.getElementById('loading-overlay');
+    const reveal = () => {
+        if (overlay.classList.contains('fade-out')) return;
+        overlay.classList.add('fade-out');
+        overlay.addEventListener('transitionend', () => overlay.remove());
+    };
 
-function applyOriginalColor() {
-    const content = document.querySelector('.content');
-    const originalButton = document.getElementById('original-color-button');
-    const invertedButton = document.getElementById('inverted-color-button');
-    
-    if (content) {
-        content.style.filter = `
-            invert(0%)
-            hue-rotate(0deg)
-            brightness(1)
-            contrast(1)
-            saturate(1)
-            sepia(0)
-            grayscale(0)
-        `;
-        
-        // Reset button styles to their original state
-        originalButton.style.backgroundColor = 'rgba(10, 10, 10, 0.9)';
-        originalButton.style.border = '2px solid rgba(200, 200, 200, 0.8)';
-        originalButton.style.boxShadow = '0 0 8px rgba(0, 0, 0, 0.5)';
-        
-        invertedButton.style.backgroundColor = 'rgba(245, 245, 245, 0.9)';
-        invertedButton.style.border = '2px solid rgba(50, 50, 50, 0.8)';
-        invertedButton.style.boxShadow = '0 0 8px rgba(255, 255, 255, 0.5)';
-    }
-}
-
-function applyRandomFilter() {
-    const content = document.querySelector('.content');
-    const originalButton = document.getElementById('original-color-button');
-    const invertedButton = document.getElementById('inverted-color-button');
-    
-    if (content) {
-        const hueRotate = Math.floor(Math.random() * 360);
-        const brightness = (Math.random() * 0.4) + 0.8;
-        const contrast = (Math.random() * 0.4) + 0.8;
-        const saturate = (Math.random() * 0.4) + 0.8;
-        const sepia = (Math.random() * 0.3).toFixed(2);
-        const grayscale = (Math.random() * 0.3).toFixed(2);
-
-        content.style.filter = `
-            invert(0%)
-            hue-rotate(${hueRotate}deg)
-            brightness(${brightness})
-            contrast(${contrast})
-            saturate(${saturate})
-            sepia(${sepia})
-            grayscale(${grayscale})
-        `;
-        
-        // Reset button styles to their original state when applying random filter
-        originalButton.style.backgroundColor = 'rgba(10, 10, 10, 0.9)';
-        originalButton.style.border = '2px solid rgba(200, 200, 200, 0.8)';
-        originalButton.style.boxShadow = '0 0 8px rgba(0, 0, 0, 0.5)';
-        
-        invertedButton.style.backgroundColor = 'rgba(245, 245, 245, 0.9)';
-        invertedButton.style.border = '2px solid rgba(50, 50, 50, 0.8)';
-        invertedButton.style.boxShadow = '0 0 8px rgba(255, 255, 255, 0.5)';
-    }
-}
-
-// UI setup functions
-function setupColorButtons() {
-    const originalButton = document.getElementById('original-color-button');
-    const invertedButton = document.getElementById('inverted-color-button');
-
-    originalButton.addEventListener('click', applyOriginalColor);
-    invertedButton.addEventListener('click', applyInversion);
-}
-
-function setupKeyboardListener() {
-    document.addEventListener('keydown', (event) => {
-        inputSequence += event.key;
-
-        if (inputSequence.endsWith('alex') || 
-            inputSequence.endsWith('couscous') || 
-            inputSequence.endsWith('usquare') || 
-            inputSequence.endsWith('strange')) {
-            switchVideo();
-            inputSequence = '';
-        }
-
-        // Limit the length of the input sequence
-        if (inputSequence.length > 9) {
-            inputSequence = inputSequence.slice(1);
-        }
+    const pageLoaded = new Promise(resolve => {
+        if (document.readyState === 'complete') resolve();
+        else window.addEventListener('load', resolve, { once: true });
     });
+
+    // The load event doesn't wait for CSS background images, so also wait for
+    // the tile artwork to be decoded — otherwise the center video can show up
+    // alone as a bare square against black
+    const tileArt = new Image();
+    tileArt.src = 'other.webp';
+    const tileArtReady = tileArt.decode().catch(() => {});
+
+    // Wait for the video's first frame too, so the whole composition
+    // (tiles + attractor) appears at once when the black lifts
+    const videoReady = new Promise(resolve => {
+        if (centerVideo.readyState >= 2) resolve();
+        else centerVideo.addEventListener('loadeddata', resolve, { once: true });
+    });
+
+    Promise.all([pageLoaded, tileArtReady, videoReady]).then(reveal);
+    // Safety net in case loading stalls on a slow connection
+    setTimeout(reveal, 6000);
 }
 
-function setupInfoAndMissionButtons() {
-    const infoButton = document.getElementById('info-button');
-    const infoText = document.getElementById('info-text');
-    const missionButton = document.getElementById('mission-button');
-    const missionText = document.getElementById('mission-text');
-    const content = document.querySelector('.content');
-    
-    // Check if screen is mobile-sized
-    const isMobileView = () => window.innerWidth <= 980;
-
-    infoButton.addEventListener('click', () => {
-        infoText.classList.toggle('visible');
-        // Close mission text if open
-        missionText.classList.remove('visible');
-        // Reset grid position when closing mission text
-        document.getElementById('grid-container').classList.remove('shifted');
-
-        if (infoText.classList.contains('visible')) {
-            // Auto-hide after 15 seconds
-            setTimeout(() => {
-                infoText.classList.remove('visible');
-            }, 15000);
-        }
-    });
-    
-    missionButton.addEventListener('click', () => {
-        const isMissionVisible = missionText.classList.contains('visible');
-        const gridContainer = document.getElementById('grid-container');
-        
-        // If we're hiding the mission text
-        if (isMissionVisible) {
-            // First remove visibility class from mission text
-            missionText.classList.remove('visible');
-            
-            // Then reset grid position (only on larger screens)
-            if (!isMobileView()) {
-                gridContainer.classList.remove('shifted');
-            }
-        } 
-        // If we're showing the mission text
-        else {
-            // First start grid animation (only on larger screens)
-            if (!isMobileView()) {
-                gridContainer.classList.add('shifted');
-            }
-            
-            // Then make mission text visible
-            missionText.classList.add('visible');
-        }
-        
-        // Close info text if open
-        infoText.classList.remove('visible');
-    });
-    
-    // Only the mission button can close the mission text
-    // Remove the click event listener that closes mission text when clicking outside
-}
-
-function handleLoadingState() {
-    const loadingOverlay = document.getElementById('loading-overlay');
-    loadingOverlay.classList.add('fade-out');
-    loadingOverlay.addEventListener('transitionend', () => {
-        loadingOverlay.parentNode.removeChild(loadingOverlay);
-    });
+// === Utilities ===
+function debounce(fn, delayMs) {
+    let timer = null;
+    return (...args) => {
+        clearTimeout(timer);
+        timer = setTimeout(() => fn(...args), delayMs);
+    };
 }
