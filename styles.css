@@ -273,6 +273,123 @@ button:focus {
     transition: opacity 1s ease-in-out;
 }
 
+/* === Easter eggs (eggs.js) === */
+/* The note every egg leads to. It lives in the mission panel, which shows
+   either its usual text or, once an egg is found (.egg-found), the note */
+.mission-text:not(.egg-found) > .egg-note,
+.mission-text.egg-found > :not(.egg-note) {
+    display: none;
+}
+
+.egg-note p:last-child {
+    margin-bottom: 0;
+}
+
+.egg-note a {
+    white-space: nowrap;
+}
+
+/* A copy of one digit of the field; geometry and --gathered (its place in
+   the gathered row) are set inline by eggs.js */
+.whisper-digit {
+    position: absolute;
+    z-index: 2;
+    pointer-events: none;
+    background-color: #000;
+    background-image: url('other.webp');
+    border-radius: 15%;
+    transition: transform 0.5s ease-in-out, filter 0.5s ease-in-out, box-shadow 0.5s ease-in-out;
+}
+
+/* Gathered for as long as the visitor keeps typing the code right */
+.whisper-digit.lit {
+    transform: var(--gathered);
+    filter: brightness(1.5);
+    box-shadow: 0 0 2px 1px #000;
+}
+
+/* Gathering unprompted: out, hold, and back */
+.whisper-digit.drifting {
+    animation: whisper ease-in-out both;
+}
+
+@keyframes whisper {
+    0%, 100% {
+        transform: none;
+        filter: brightness(1);
+        box-shadow: none;
+    }
+    25%, 75% {
+        transform: var(--gathered);
+        filter: brightness(1.5);
+        box-shadow: 0 0 2px 1px #000;
+    }
+}
+
+/* Moved along its flight path, frame by frame, by eggs.js */
+.butterfly {
+    position: fixed;
+    top: -36px;
+    left: -36px;
+    width: 72px;
+    height: 72px;
+    padding: 15px;
+    cursor: pointer;
+    touch-action: none;
+    z-index: 3;
+}
+
+.butterfly svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    filter: drop-shadow(0 0 4px rgba(255, 204, 0, 0.9));
+    transition: transform 0.6s ease-out, opacity 0.6s ease-out, filter 0.3s ease;
+}
+
+/* Alarm colors and a faster wingbeat while it flees the mouse */
+.butterfly.fleeing svg {
+    filter: drop-shadow(0 0 6px rgba(255, 60, 90, 1));
+}
+
+.butterfly.fleeing .butterfly-wings {
+    fill: rgba(255, 45, 85, 0.9);
+    stroke: #fff;
+    animation-duration: 0.08s;
+}
+
+.butterfly.fleeing .butterfly-body {
+    stroke: #fff;
+}
+
+.butterfly.caught svg {
+    transform: scale(2.5);
+    opacity: 0;
+}
+
+.butterfly-wings {
+    fill: rgba(70, 90, 255, 0.85);
+    stroke: var(--accent);
+    stroke-width: 1.3;
+    stroke-linejoin: round;
+    animation: flap 0.16s ease-in-out infinite alternate;
+    transition: fill 0.3s ease, stroke 0.3s ease;
+}
+
+.butterfly-body {
+    fill: none;
+    stroke: var(--accent);
+    stroke-width: 1.3;
+    stroke-linecap: round;
+    transition: stroke 0.3s ease;
+}
+
+@keyframes flap {
+    from { transform: scaleX(1); }
+    to { transform: scaleX(0.25); }
+}
+
 /* === Small screens === */
 @media only screen and (max-width: 980px) {
     .info-text {

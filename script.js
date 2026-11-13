@@ -177,10 +177,13 @@ function applyRandomFilter() {
 }
 
 // === Video switch easter egg ===
-function switchVideo() {
+// fadeMs: how long the current attractor takes to fade out, and then the
+// next one to fade in
+function switchVideo(fadeMs = 1000) {
     if (!centerVideo) return;
 
     videoIndex = (videoIndex + 1) % VIDEO_SOURCES.length;
+    centerVideo.style.transitionDuration = `${fadeMs}ms`;
     centerVideo.classList.add('fade-out');
 
     // Wait for the fade-out before swapping sources
@@ -194,9 +197,12 @@ function switchVideo() {
             centerVideo.classList.remove('fade-out');
             centerVideo.classList.add('fade-in');
             centerVideo.play();
-            setTimeout(() => centerVideo.classList.remove('fade-in'), 1000);
+            setTimeout(() => {
+                centerVideo.classList.remove('fade-in');
+                centerVideo.style.transitionDuration = '';
+            }, fadeMs);
         }, { once: true });
-    }, 1000);
+    }, fadeMs);
 }
 
 function setupKeyboardListener() {

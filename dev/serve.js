@@ -28,7 +28,11 @@ http.createServer((req, res) => {
   if (!filePath.startsWith(ROOT)) { res.writeHead(403); return res.end(); }
 
   fs.stat(filePath, (err, stat) => {
-    if (err || !stat.isFile()) { res.writeHead(404); return res.end('not found'); }
+    if (err || !stat.isFile()) {
+      // Like GitHub Pages: unknown paths get 404.html
+      res.writeHead(404, { 'Content-Type': MIME['.html'] });
+      return fs.createReadStream(path.join(ROOT, '404.html')).pipe(res);
+    }
     const type = MIME[path.extname(filePath).toLowerCase()] || 'application/octet-stream';
     const range = req.headers.range && /^bytes=(\d*)-(\d*)$/.exec(req.headers.range);
     if (range) {

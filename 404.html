@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex">
+    <title>Strange Attractor — Not found</title>
+    <style>
+        html, body { height: 100%; margin: 0; background: black; }
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font: 14px/1.5 "Courier New", monospace;
+            text-align: center;
+        }
+        a { color: #ffcc00; }
+    </style>
+    <script>
+        // A hidden door: there is no jobs page, but asking for one leads to
+        // the note behind the home page's easter eggs (see eggs.js)
+        if (/^\/(jobs?|careers?|hire|hiring|join(-us)?|apply|work(-with-us)?)\/?$/i.test(location.pathname)) {
+            location.replace('/#jobs');
+        }
+    </script>
+</head>
+<body>
+    <p>This trajectory leads nowhere.<br><a href="/">Back to the attractor</a></p>
+</body>
+</html>
