@@ -39,7 +39,7 @@
 
     // Typing this summons the butterfly without the wait
     const BUTTERFLY_CALL = 'butterfly';
-    const BUTTERFLY_FIRST_MS = 40000;
+    const BUTTERFLY_FIRST_MS = 20000;
     const BUTTERFLY_EVERY_MS = 70000; // retry, if its turn was skipped
     const BUTTERFLY_FADE_MS = 2400;
     const BUTTERFLY_PACE = 1 / 7500; // Lorenz time per ms: about 7 seconds a loop
